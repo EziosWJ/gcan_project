@@ -1,0 +1,81 @@
+# CONTEXT.md
+
+> 本文件记录本项目的领域语言与术语。它是 `improve-codebase-architecture` / `diagnose` / `tdd` / `grill-with-docs` 等 skills 读取的"词汇表"——当输出里需要命名一个领域概念时，从这里取词，避免各自生造近义词。
+>
+> **不要在这里编造术语。** 只写已经真实存在于代码或对话里的词。如果项目结构暗示存在某个概念（例如脚手架里预留了 `src/modules/user/`），先不要假设它的业务含义——等业务含义在对话里浮现、并经 `/grill-with-docs` 确认后再补进来。
+
+## 项目概览
+
+- **项目代号**: base-project-java 仓库
+- **仓库类型**: monorepo
+- **交流 / 输出语言**: 中文
+- **脚手架占位内容**: 脚手架里已出现大量"占位"示例（如 HelloWorld、UserTable、示例组件等），这些**不是真正的业务概念**，只是脚手架产物。真正的业务领域术语应来自后续的业务对话，而不是反向推导脚手架示例。
+
+## 目录结构
+
+```
+/
+├── react-admin/      # 前端（管理后台 SPA）
+├── base-api/         # 后端（Java API）
+├── record/           # 项目过程记录
+├── docs/
+│   ├── adr/          # 架构决策记录（ADR）
+│   └── agents/       # Agent skills 的仓库级配置
+└── task/             # 任务上下文（读取范围边界时参考）
+```
+
+## 技术栈（已确认，来自 manifest）
+
+### 前端 react-admin
+- 框架: React 19 + TypeScript + Vite 6
+- 路由: react-router-dom v7
+- 状态管理: Zustand
+- 表单: react-hook-form + zod（@hookform/resolvers）
+- 样式: Tailwind CSS + class-variance-authority + tailwind-merge
+- 图标: lucide-react
+- Lint: ESLint + typescript-eslint
+
+### 后端 base-api
+- 框架: Spring Boot 3（Java）
+- ORM: MyBatis-Plus（含 jsqlparser）
+- 认证/鉴权: Sa-Token
+- 验证: spring-boot-starter-validation
+- 横切关注点: spring-boot-starter-aop
+- 运行时依赖（来自 pom）: MySQL、Redis（sa-token-redis 集成）
+
+## 已知领域术语
+
+| 术语 | 同义词 / 禁用词 | 定义 |
+| --- | --- | --- |
+| 车辆 | 车辆实体、车 | 接入 GCAN 盒子并上报 CAN 数据的业务对象。 |
+| 车辆档案 | 车辆信息、车辆基础信息 | 描述一辆车辆的基础业务资料，用于识别车辆并关联其 CAN 数据。 |
+| 停用车辆 | 禁用车辆 | 已被排除出车辆 CAN 状态解析和 CAN 历史数据写入的车辆。 |
+| 车辆类型 | 车型、车型编码 | 用于选择车辆 CAN 数据解析规则的车辆分类。 |
+| GCAN 盒子 | 盒子、CAN 盒子、设备 | 安装或绑定在车辆上的数据采集设备，负责上报车辆 CAN 数据。 |
+| 盒子绑定 | 车辆盒子绑定、设备绑定 | 车辆与 GCAN 盒子之间的对应关系。 |
+| 车辆 CAN 状态 | 当前状态、车辆状态 | 由车辆 CAN 数据解析出的车辆运行状态。 |
+| 协议解析器 | 车型协议处理器、CAN 解析器 | 根据车辆类型和 CAN ID 将原始 CAN 帧记录解释为车辆 CAN 状态的规则集合。 |
+| 实时快照 | 当前快照、最新状态 | 系统当前看到的某辆车辆或某个 GCAN 盒子的最新状态。 |
+| CAN 历史数据 | 历史数据、CAN 历史 | 已接收并保留下来的 CAN 数据记录，用于后续追溯和查询。 |
+| 原始 CAN 帧记录 | 原始帧、CAN 帧记录 | GCAN 盒子上报的一条未解析为车辆状态的 CAN 数据记录。 |
+| CAN ID | 报文 ID、帧 ID | 原始 CAN 帧记录中的标识，用于区分不同类型的 CAN 数据。 |
+| 在线状态 | 在线/离线状态 | 系统根据 GCAN 盒子最近一次上报时间判断出的连接活跃状态。 |
+
+## 边界与职责约定（已确认）
+
+- **前端改动范围**: `react-admin/src/**`，不要新建顶层 `src/`。
+- **后端改动范围**: `base-api/src/**`。
+- **脚手架结构参考**: 只看单个子模块，不要批量扫目录。
+- **架构参考**: 只在 `docs/` 或 `experience/` 下找摘要。
+
+## 何时本文件需要更新
+
+以下信号之一出现时，应触发本文件（和/或 `docs/adr/`）的更新，通常由 `/grill-with-docs` 完成：
+
+- 业务对话里**首次出现**一个项目通用名词（例如"训问""任务单"）。
+- 两个模块对同一个概念使用不同名字——应在这里趋向统一。
+- 某次架构决策被沉淀下来（例如"为什么选 Zustand 而非 Redux"）——应写进 `docs/adr/`。
+
+---
+
+_本文件最初由 `/setup-matt-pocock-skills` 与 `/grill-with-docs` 协作初始化。后续每一条术语都应该有可追溯的业务来源。_
