@@ -7,6 +7,9 @@ import { DashboardPage } from "@/pages/dashboard";
 import { DetailDemoPage } from "@/pages/examples/detail-demo";
 import { FormExamplePage } from "@/pages/form-example";
 import { ListDemoPage } from "@/pages/examples/list-demo";
+import { GcanRawFramesPage } from "@/pages/gcan/raw-frames";
+import { GcanVehicleCanStatePage } from "@/pages/gcan/vehicle-can-state";
+import { GcanVehiclesPage } from "@/pages/gcan/vehicles";
 import { TreeDemoPage } from "@/pages/examples/tree-demo";
 import { TreeTableDemoPage } from "@/pages/examples/tree-table-demo";
 import { LoginPage } from "@/pages/login";
@@ -70,6 +73,18 @@ export const router = createBrowserRouter([
       {
         path: "settings",
         element: <SettingsPage />,
+      },
+      {
+        path: "gcan/vehicles",
+        element: <GcanVehiclesPage />,
+      },
+      {
+        path: "gcan/vehicle-can-state",
+        element: <GcanVehicleCanStatePage />,
+      },
+      {
+        path: "gcan/raw-frames",
+        element: <GcanRawFramesPage />,
       },
       {
         path: "system",

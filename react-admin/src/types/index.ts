@@ -78,6 +78,17 @@ export type {
   SystemConfigValueType,
   SystemStatus,
 } from "./system";
+export type {
+  GcanByteFormat,
+  GcanRawFrameRecord,
+  GcanVehicleBatchDeleteRequest,
+  GcanVehicleCanStateRecord,
+  GcanVehiclePageQuery,
+  GcanVehicleRecord,
+  GcanVehicleSaveRequest,
+  GcanVehicleStatusRequest,
+  GcanVehicleTypeRecord,
+} from "./gcan";
 export type { DataTableColumn } from "./table";
 export type {
   MenuQuery,

@@ -1,4 +1,7 @@
 import {
+  Activity,
+  Binary,
+  CarFront,
   FileSearch,
   FileText,
   LayoutDashboard,
@@ -55,6 +58,28 @@ export const defaultNavItems: NavItem[] = [
         label: "详情页 Demo",
         path: "/examples/detail",
         icon: FileSearch,
+      },
+    ],
+  },
+  {
+    label: "GCAN",
+    path: "/gcan",
+    icon: CarFront,
+    children: [
+      {
+        label: "车辆档案",
+        path: "/gcan/vehicles",
+        icon: CarFront,
+      },
+      {
+        label: "车辆 CAN 状态",
+        path: "/gcan/vehicle-can-state",
+        icon: Activity,
+      },
+      {
+        label: "原始 CAN 帧",
+        path: "/gcan/raw-frames",
+        icon: Binary,
       },
     ],
   },
@@ -175,6 +200,10 @@ export const staticRouteTitleMap: Record<string, string> = {
   "/examples/tree-table": "左树右表 Demo",
   "/examples/detail": "详情页 Demo",
   "/settings": "系统设置",
+  "/gcan": "GCAN",
+  "/gcan/vehicles": "车辆档案",
+  "/gcan/vehicle-can-state": "车辆 CAN 状态",
+  "/gcan/raw-frames": "原始 CAN 帧",
   "/system": "系统管理",
   "/system/user": "用户管理",
   "/system/dept": "部门管理",

@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: gcan-api
+  profiles:
+    active: dev
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DB_URL:jdbc:mysql://localhost:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  port: 8081
+
+gcan:
+  tcp:
+    port: 8000
+  frame-stale-threshold-ms: 10000
+  history:
+    enabled: true
+    store-interval-ms: 3000
+    included-can-ids:
+      - 08F200A0
+      - 1811A6A0
+      - 1836FF30
+      - 0C10A7F0
+      - 043C9CF4
+      - 1830D02C
+      - 043D9CF4
+      - 1840FF30
+      - 1846FF30
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+app:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+app:
+  cors:
+    allowed-origins: []

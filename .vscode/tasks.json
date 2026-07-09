@@ -1,0 +1,51 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "base-api: install local modules",
+            "type": "shell",
+            "command": "./mvnw -pl system-api,gcan-api -am -DskipTests install",
+            "options": {
+                "cwd": "${workspaceFolder}/base-api"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "base-api: run system-api",
+            "type": "shell",
+            "command": "./mvnw -pl system-api spring-boot:run -Dspring-boot.run.profiles=dev",
+            "options": {
+                "cwd": "${workspaceFolder}/base-api",
+                "env": {
+                    "DB_URL": "jdbc:mysql://192.168.1.7:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true",
+                    "DB_USERNAME": "root",
+                    "DB_PASSWORD": "bddq2024"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "base-api: run gcan-api",
+            "type": "shell",
+            "command": "./mvnw -pl gcan-api spring-boot:run -Dspring-boot.run.profiles=dev",
+            "options": {
+                "cwd": "${workspaceFolder}/base-api",
+                "env": {
+                    "DB_URL": "jdbc:mysql://192.168.1.7:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true",
+                    "DB_USERNAME": "root",
+                    "DB_PASSWORD": "bddq2024"
+                }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "base-api: run system-api + gcan-api",
+            "dependsOrder": "parallel",
+            "dependsOn": [
+                "base-api: run system-api",
+                "base-api: run gcan-api"
+            ],
+            "problemMatcher": []
+        }
+    ]
+}

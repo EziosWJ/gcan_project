@@ -19,9 +19,31 @@
         },
         {
             "type": "java",
+            "name": "GCAN API",
+            "request": "launch",
+            "mainClass": "cn.ezios.baseapi.gcan.GcanApiApplication",
+            "cwd": "${workspaceFolder}/base-api/gcan-api",
+            "env": {
+                "DB_URL": "jdbc:mysql://192.168.1.7:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true",
+                "DB_USERNAME": "root",
+                "DB_PASSWORD": "bddq2024"
+            },
+            "args": "--spring.profiles.active=dev"
+        },
+        {
+            "type": "java",
             "name": "Current File",
             "request": "launch",
             "mainClass": "${file}"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "System API + GCAN API",
+            "configurations": [
+                "System API",
+                "GCAN API"
+            ]
         }
     ]
 }
