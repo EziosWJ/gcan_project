@@ -7,6 +7,10 @@ import lombok.Data;
 @Data
 public class RawCanFrameVO {
 
+    private Long vehicleId;
+    private String vehicleName;
+    private String mineId;
+    private String vehicleType;
     private String boxIdHex;
     private Integer boxIdDec;
     private String canId;

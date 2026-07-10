@@ -11,7 +11,12 @@ public class VehicleSaveRequest {
     @Size(max = 100, message = "车辆名称长度不能超过 100")
     private String vehicleName;
 
+    @NotBlank(message = "煤矿不能为空")
+    @Size(max = 100, message = "煤矿ID长度不能超过 100")
+    private String mineId;
+
     @NotBlank(message = "车辆类型不能为空")
+    @Size(max = 50, message = "车辆类型长度不能超过 50")
     private String vehicleType;
 
     @NotBlank(message = "盒子ID(HEX)不能为空")

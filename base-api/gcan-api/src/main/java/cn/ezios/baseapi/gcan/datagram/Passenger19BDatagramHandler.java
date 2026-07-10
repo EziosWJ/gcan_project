@@ -1,13 +1,13 @@
 package cn.ezios.baseapi.gcan.datagram;
 
-import cn.ezios.baseapi.gcan.vehicle.VehicleType;
+import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Passenger19BDatagramHandler extends AbstractPassengerVehicleDatagramHandler {
 
     @Override
-    public boolean canHandle(String vehicleType) {
-        return VehicleType.REN_19_B.name().equals(vehicleType);
+    public Set<String> supportedVehicleTypes() {
+        return Set.of("REN_19_B");
     }
 }

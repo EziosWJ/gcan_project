@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS gcan_vehicle (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
     vehicle_name VARCHAR(100) NOT NULL COMMENT '车辆名称',
+    mine_id VARCHAR(100) NOT NULL COMMENT '煤矿ID',
     vehicle_type VARCHAR(50) NOT NULL COMMENT '车辆类型',
     box_id_hex VARCHAR(2) NOT NULL COMMENT 'GCAN盒子ID HEX',
     box_id_dec INT NOT NULL COMMENT 'GCAN盒子ID DEC',
@@ -12,6 +13,8 @@ CREATE TABLE IF NOT EXISTS gcan_vehicle (
     update_by BIGINT NULL COMMENT '更新人',
     deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0未删除 1已删除',
     PRIMARY KEY (id),
+    KEY idx_gcan_vehicle_mine (mine_id),
+    KEY idx_gcan_vehicle_type (vehicle_type),
     KEY idx_gcan_vehicle_box_deleted (box_id_hex, deleted),
     KEY idx_gcan_vehicle_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='GCAN车辆档案';

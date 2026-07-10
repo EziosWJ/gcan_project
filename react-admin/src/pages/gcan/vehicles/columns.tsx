@@ -9,6 +9,8 @@ type VehicleColumnActions = {
   selectedIds: Set<number>;
   allChecked: boolean;
   selectableCount: number;
+  mineLabelMap: Map<string, string>;
+  vehicleTypeLabelMap: Map<string, string>;
   onToggleSelect: (id: number, checked: boolean) => void;
   onToggleSelectAll: (checked: boolean) => void;
   onEdit: (record: GcanVehicleRecord) => void;
@@ -49,12 +51,27 @@ export function createVehicleColumns(
       render: (value) => <span className="font-medium">{String(value ?? "-")}</span>,
     },
     {
+      title: "煤矿",
+      dataIndex: "mineId",
+      width: 150,
+      render: (value) => {
+        const mineId = String(value ?? "");
+        const label = actions.mineLabelMap.get(mineId) ?? mineId;
+        return (
+          <span className="text-text-secondary">
+            {label || "-"}
+          </span>
+        );
+      },
+    },
+    {
       title: "车辆类型",
       dataIndex: "vehicleTypeLabel",
       width: 150,
       render: (value, record) => (
         <span className="text-text-secondary">
-          {String(value ?? record.vehicleType ?? "-")}
+          {actions.vehicleTypeLabelMap.get(record.vehicleType) ??
+            String(value ?? record.vehicleType ?? "-")}
         </span>
       ),
     },
@@ -144,4 +161,3 @@ export function createVehicleColumns(
     },
   ];
 }
-

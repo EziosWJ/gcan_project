@@ -2,7 +2,6 @@ package cn.ezios.baseapi.gcan.datagram;
 
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.state.VehicleCanState;
-import cn.ezios.baseapi.gcan.vehicle.VehicleType;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,8 +15,10 @@ public abstract class AbstractVehicleCanDatagramHandler implements VehicleCanDat
         VehicleCanState state = new VehicleCanState();
         state.setVehicleId(vehicle.getId());
         state.setVehicleName(vehicle.getVehicleName());
+        state.setMineId(vehicle.getMineId());
         state.setVehicleType(vehicle.getVehicleType());
-        state.setVehicleTypeLabel(VehicleType.valueOf(vehicle.getVehicleType()).getLabel());
+        state.setVehicleTypeLabel(vehicle.getVehicleType());
+        state.setParseSupported(true);
         state.setBoxIdHex(vehicle.getBoxIdHex());
         state.setBoxIdDec(vehicle.getBoxIdDec());
         state.setUpdateTime(LocalDateTime.now());

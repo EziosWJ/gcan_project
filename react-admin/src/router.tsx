@@ -7,6 +7,9 @@ import { DashboardPage } from "@/pages/dashboard";
 import { DetailDemoPage } from "@/pages/examples/detail-demo";
 import { FormExamplePage } from "@/pages/form-example";
 import { ListDemoPage } from "@/pages/examples/list-demo";
+import { GcanMinesPage } from "@/pages/gcan/dictionaries/mines";
+import { GcanVehicleTypesPage } from "@/pages/gcan/dictionaries/vehicle-types";
+import { GcanHexDecConverterPage } from "@/pages/gcan/hex-dec-converter";
 import { GcanRawFramesPage } from "@/pages/gcan/raw-frames";
 import { GcanVehicleCanStatePage } from "@/pages/gcan/vehicle-can-state";
 import { GcanVehiclesPage } from "@/pages/gcan/vehicles";
@@ -79,8 +82,20 @@ export const router = createBrowserRouter([
         element: <GcanVehiclesPage />,
       },
       {
+        path: "gcan/mines",
+        element: <GcanMinesPage />,
+      },
+      {
+        path: "gcan/vehicle-types",
+        element: <GcanVehicleTypesPage />,
+      },
+      {
         path: "gcan/vehicle-can-state",
         element: <GcanVehicleCanStatePage />,
+      },
+      {
+        path: "gcan/hex-dec",
+        element: <GcanHexDecConverterPage />,
       },
       {
         path: "gcan/raw-frames",

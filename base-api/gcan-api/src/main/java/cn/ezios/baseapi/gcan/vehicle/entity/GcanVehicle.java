@@ -17,6 +17,7 @@ public class GcanVehicle {
     private Long id;
 
     private String vehicleName;
+    private String mineId;
     private String vehicleType;
     private String boxIdHex;
     private Integer boxIdDec;

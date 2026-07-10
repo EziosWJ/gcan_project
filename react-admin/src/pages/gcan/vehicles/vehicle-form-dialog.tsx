@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { GcanVehicleRecord, GcanVehicleTypeRecord } from "@/types";
+import type { DictSelectOption } from "@/constants/dicts";
+import type { GcanVehicleRecord } from "@/types";
 import {
   vehicleFormSchema,
   toVehicleFormValues,
@@ -28,7 +29,8 @@ type VehicleFormDialogProps = {
   open: boolean;
   mode: VehicleFormMode;
   record: GcanVehicleRecord | null;
-  vehicleTypes: GcanVehicleTypeRecord[];
+  mineOptions: DictSelectOption[];
+  vehicleTypeOptions: DictSelectOption[];
   submitting: boolean;
   onSubmit: (values: VehicleFormValues) => void;
   onCancel: () => void;
@@ -38,7 +40,8 @@ export function VehicleFormDialog({
   open,
   mode,
   record,
-  vehicleTypes,
+  mineOptions,
+  vehicleTypeOptions,
   submitting,
   onSubmit,
   onCancel,
@@ -115,6 +118,22 @@ export function VehicleFormDialog({
           </Field>
 
           <Field
+            label="煤矿"
+            htmlFor="gcan-mine-id"
+            required
+            error={form.formState.errors.mineId?.message}
+          >
+            <Select id="gcan-mine-id" {...form.register("mineId")}>
+              <option value="">请选择煤矿</option>
+              {mineOptions.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field
             label="车辆类型"
             htmlFor="gcan-vehicle-type"
             required
@@ -122,8 +141,8 @@ export function VehicleFormDialog({
           >
             <Select id="gcan-vehicle-type" {...form.register("vehicleType")}>
               <option value="">请选择车辆类型</option>
-              {vehicleTypes.map((item) => (
-                <option key={item.code} value={item.code}>
+              {vehicleTypeOptions.map((item) => (
+                <option key={item.value} value={item.value}>
                   {item.label}
                 </option>
               ))}

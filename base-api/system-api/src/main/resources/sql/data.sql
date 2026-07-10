@@ -68,7 +68,9 @@ VALUES
 INSERT INTO sys_dict_type (id, dict_name, dict_code, status, sort_order, is_builtin, remark)
 VALUES
 (8, '配置类型', 'CONFIG_TYPE', 1, 8, 1, '系统配置归属类型'),
-(9, '配置值类型', 'CONFIG_VALUE_TYPE', 1, 9, 1, '配置值数据类型');
+(9, '配置值类型', 'CONFIG_VALUE_TYPE', 1, 9, 1, '配置值数据类型'),
+(10, 'GCAN煤矿', 'gcan_mine', 1, 10, 1, 'GCAN车辆所属煤矿'),
+(11, 'GCAN车型', 'gcan_vehicle_type', 1, 11, 1, 'GCAN车辆类型编码');
 
 INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, remark)
 VALUES
@@ -76,7 +78,11 @@ VALUES
 (8, '自定义配置', 'CUSTOM', 2, NULL),
 (9, '文本', 'TEXT', 1, NULL),
 (9, '数字', 'NUMBER', 2, NULL),
-(9, '布尔', 'BOOLEAN', 3, NULL);
+(9, '布尔', 'BOOLEAN', 3, NULL),
+(11, '19座人车', 'REN_19', 1, NULL),
+(11, '19座人车B型', 'REN_19_B', 2, NULL),
+(11, '1.9T料车', 'LIAO_1_9T', 3, NULL),
+(11, '5T料车', 'LIAO_5T', 4, NULL);
 
 INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, value_type, status, is_builtin, remark)
 VALUES

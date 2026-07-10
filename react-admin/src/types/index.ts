@@ -80,14 +80,16 @@ export type {
 } from "./system";
 export type {
   GcanByteFormat,
+  GcanRawFrameHistoryQuery,
+  GcanRawFrameQuery,
   GcanRawFrameRecord,
   GcanVehicleBatchDeleteRequest,
   GcanVehicleCanStateRecord,
+  GcanVehicleCanStateQuery,
   GcanVehiclePageQuery,
   GcanVehicleRecord,
   GcanVehicleSaveRequest,
   GcanVehicleStatusRequest,
-  GcanVehicleTypeRecord,
 } from "./gcan";
 export type { DataTableColumn } from "./table";
 export type {

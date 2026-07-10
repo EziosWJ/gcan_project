@@ -8,6 +8,7 @@ public class VehicleVO {
 
     private Long id;
     private String vehicleName;
+    private String mineId;
     private String vehicleType;
     private String vehicleTypeLabel;
     private String boxIdHex;

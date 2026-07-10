@@ -11,7 +11,6 @@ import {
   createGcanVehicle,
   deleteGcanVehicle,
   getGcanVehiclePage,
-  getGcanVehicleTypes,
   updateGcanVehicle,
   updateGcanVehicleStatus,
 } from "@/api/gcan";
@@ -26,9 +25,11 @@ import { toast } from "@/components/common/toast-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { DICT_CODES } from "@/constants/dicts";
+import { useDictOptions } from "@/hooks/use-dict-options";
 import { useListPage } from "@/hooks/use-list-page";
 import { getErrorMessage } from "@/lib/api-error";
-import type { ApiStatus, GcanVehicleRecord, GcanVehicleTypeRecord } from "@/types";
+import type { ApiStatus, GcanVehicleRecord } from "@/types";
 import { createVehicleColumns } from "./columns";
 import { VehicleFormDialog } from "./vehicle-form-dialog";
 import {
@@ -72,14 +73,29 @@ export function GcanVehiclesPage() {
   });
 
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [vehicleTypes, setVehicleTypes] = useState<GcanVehicleTypeRecord[]>([]);
-  const [vehicleTypesLoading, setVehicleTypesLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<VehicleFormMode>("create");
   const [editingVehicle, setEditingVehicle] = useState<GcanVehicleRecord | null>(null);
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const mineDict = useDictOptions(DICT_CODES.GCAN_MINE);
+  const vehicleTypeDict = useDictOptions(DICT_CODES.GCAN_VEHICLE_TYPE);
+
+  const mineLabelMap = useMemo(
+    () => new Map(mineDict.options.map((item) => [String(item.value), item.label])),
+    [mineDict.options],
+  );
+  const vehicleTypeLabelMap = useMemo(
+    () =>
+      new Map(
+        vehicleTypeDict.options.map((item) => [
+          String(item.value).toUpperCase(),
+          item.label,
+        ]),
+      ),
+    [vehicleTypeDict.options],
+  );
 
   useEffect(() => {
     setSelectedIds((current) => {
@@ -87,31 +103,6 @@ export function GcanVehiclesPage() {
       return new Set([...current].filter((id) => visibleIds.has(id)));
     });
   }, [vehicles]);
-
-  useEffect(() => {
-    let active = true;
-    setVehicleTypesLoading(true);
-
-    void getGcanVehicleTypes()
-      .then((data) => {
-        if (!active) return;
-        setVehicleTypes(data);
-      })
-      .catch((err) => {
-        if (!active) return;
-        toast.error({
-          title: "车辆类型加载失败",
-          description: getErrorMessage(err, "无法获取车辆类型列表"),
-        });
-      })
-      .finally(() => {
-        if (active) setVehicleTypesLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
 
   const toggleSelect = useCallback((id: number, checked: boolean) => {
     setSelectedIds((current) => {
@@ -146,17 +137,17 @@ export function GcanVehiclesPage() {
     [selectedIds, vehicles],
   );
 
-  const openCreateForm = () => {
+  const openCreateForm = useCallback(() => {
     setFormMode("create");
     setEditingVehicle(null);
     setFormOpen(true);
-  };
+  }, []);
 
-  const openEditForm = (vehicle: GcanVehicleRecord) => {
+  const openEditForm = useCallback((vehicle: GcanVehicleRecord) => {
     setFormMode("edit");
     setEditingVehicle(vehicle);
     setFormOpen(true);
-  };
+  }, []);
 
   const submitVehicleForm = async (values: VehicleFormValues) => {
     setFormSubmitting(true);
@@ -255,6 +246,8 @@ export function GcanVehiclesPage() {
         selectedIds,
         allChecked,
         selectableCount: vehicles.length,
+        mineLabelMap,
+        vehicleTypeLabelMap,
         onToggleSelect: toggleSelect,
         onToggleSelectAll: toggleSelectAll,
         onEdit: openEditForm,
@@ -268,10 +261,12 @@ export function GcanVehiclesPage() {
       }),
     [
       allChecked,
+      mineLabelMap,
       openEditForm,
       selectedIds,
       toggleSelect,
       toggleSelectAll,
+      vehicleTypeLabelMap,
       vehicles.length,
     ],
   );
@@ -307,13 +302,25 @@ export function GcanVehiclesPage() {
           onChange={(event) => setFilter("vehicleName", event.target.value)}
         />
         <Select
+          value={filters.mineId}
+          onChange={(event) => setFilter("mineId", event.target.value)}
+          disabled={mineDict.loading}
+        >
+          <option value="">全部煤矿</option>
+          {mineDict.options.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </Select>
+        <Select
           value={filters.vehicleType}
           onChange={(event) => setFilter("vehicleType", event.target.value)}
-          disabled={vehicleTypesLoading}
+          disabled={vehicleTypeDict.loading}
         >
           <option value="">全部车辆类型</option>
-          {vehicleTypes.map((item) => (
-            <option key={item.code} value={item.code}>
+          {vehicleTypeDict.options.map((item) => (
+            <option key={item.value} value={item.value}>
               {item.label}
             </option>
           ))}
@@ -390,7 +397,8 @@ export function GcanVehiclesPage() {
         open={formOpen}
         mode={formMode}
         record={editingVehicle}
-        vehicleTypes={vehicleTypes}
+        mineOptions={mineDict.options}
+        vehicleTypeOptions={vehicleTypeDict.options}
         submitting={formSubmitting}
         onSubmit={submitVehicleForm}
         onCancel={() => setFormOpen(false)}

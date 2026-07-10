@@ -21,6 +21,8 @@ export const DICT_CODES = {
   MENU_VISIBLE: "MENU_VISIBLE",
   OPERATION_TYPE: "OPERATION_TYPE",
   USER_GENDER: "USER_GENDER",
+  GCAN_MINE: "gcan_mine",
+  GCAN_VEHICLE_TYPE: "gcan_vehicle_type",
 } as const;
 
 export const MENU_TYPE_VALUES = ["DIR", "MENU", "LINK"] as const;

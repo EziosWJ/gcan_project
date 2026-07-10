@@ -1,23 +1,58 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, RotateCcw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getGcanVehicleCanStateCurrent } from "@/api/gcan";
 import { DataTable } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
+import { SearchFilterBar } from "@/components/common/search-filter-bar";
 import { TableToolbar } from "@/components/common/table-toolbar";
 import { toast } from "@/components/common/toast-store";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { DICT_CODES } from "@/constants/dicts";
+import { useDictOptions } from "@/hooks/use-dict-options";
 import { StatusTag } from "@/components/common/status-tag";
 import { formatDateTime } from "@/lib/datetime";
 import { getErrorMessage } from "@/lib/api-error";
-import type { DataTableColumn, GcanVehicleCanStateRecord } from "@/types";
+import type { DataTableColumn, GcanVehicleCanStateQuery, GcanVehicleCanStateRecord } from "@/types";
+
+type StateFilterState = {
+  vehicleName: string;
+  mineId: string;
+  vehicleType: string;
+  boxIdHex: string;
+  online: "all" | "online" | "offline";
+};
+
+const DEFAULT_FILTERS: StateFilterState = {
+  vehicleName: "",
+  mineId: "",
+  vehicleType: "",
+  boxIdHex: "",
+  online: "all",
+};
+
+function buildStateQuery(filters: StateFilterState): GcanVehicleCanStateQuery {
+  return {
+    vehicleName: filters.vehicleName.trim() || undefined,
+    mineId: filters.mineId.trim() || undefined,
+    vehicleType: filters.vehicleType.trim() || undefined,
+    boxIdHex: filters.boxIdHex.trim() || undefined,
+    online:
+      filters.online === "all" ? undefined : filters.online === "online",
+  };
+}
 
 function formatMetric(value: number | string | boolean | null | undefined) {
   if (value === null || value === undefined || value === "") return "-";
   return String(value);
 }
 
-function createStateColumns(): DataTableColumn<GcanVehicleCanStateRecord>[] {
+function createStateColumns(
+  mineLabelMap: Map<string, string>,
+  vehicleTypeLabelMap: Map<string, string>,
+): DataTableColumn<GcanVehicleCanStateRecord>[] {
   return [
     {
       title: "车辆名称",
@@ -26,12 +61,23 @@ function createStateColumns(): DataTableColumn<GcanVehicleCanStateRecord>[] {
       render: (value) => <span className="font-medium">{String(value ?? "-")}</span>,
     },
     {
+      title: "煤矿",
+      dataIndex: "mineId",
+      width: 140,
+      render: (value) => {
+        const mineId = String(value ?? "");
+        const label = mineLabelMap.get(mineId) ?? mineId;
+        return <span className="text-text-secondary">{label || "-"}</span>;
+      },
+    },
+    {
       title: "车辆类型",
       dataIndex: "vehicleTypeLabel",
       width: 140,
       render: (value, record) => (
         <span className="text-text-secondary">
-          {String(value ?? record.vehicleType ?? "-")}
+          {vehicleTypeLabelMap.get(record.vehicleType) ??
+            String(value ?? record.vehicleType ?? "-")}
         </span>
       ),
     },
@@ -55,6 +101,16 @@ function createStateColumns(): DataTableColumn<GcanVehicleCanStateRecord>[] {
       render: (value) => (
         <StatusTag tone={value ? "success" : "error"}>
           {value ? "在线" : "离线"}
+        </StatusTag>
+      ),
+    },
+    {
+      title: "解析",
+      dataIndex: "parseSupported",
+      width: 110,
+      render: (value, record) => (
+        <StatusTag tone={value === false ? "warning" : "success"}>
+          {value === false ? (record.parseMessage ?? "未支持解析") : "已支持"}
         </StatusTag>
       ),
     },
@@ -127,13 +183,32 @@ export function GcanVehicleCanStatePage() {
   const [records, setRecords] = useState<GcanVehicleCanStateRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [filters, setFilters] = useState<StateFilterState>(DEFAULT_FILTERS);
+  const [appliedFilters, setAppliedFilters] = useState<StateFilterState>(DEFAULT_FILTERS);
+  const mineDict = useDictOptions(DICT_CODES.GCAN_MINE);
+  const vehicleTypeDict = useDictOptions(DICT_CODES.GCAN_VEHICLE_TYPE);
+
+  const mineLabelMap = useMemo(
+    () => new Map(mineDict.options.map((item) => [String(item.value), item.label])),
+    [mineDict.options],
+  );
+  const vehicleTypeLabelMap = useMemo(
+    () =>
+      new Map(
+        vehicleTypeDict.options.map((item) => [
+          String(item.value).toUpperCase(),
+          item.label,
+        ]),
+      ),
+    [vehicleTypeDict.options],
+  );
 
   const loadRecords = useCallback(async () => {
     setLoading(true);
     setError("");
 
     try {
-      const data = await getGcanVehicleCanStateCurrent();
+      const data = await getGcanVehicleCanStateCurrent(buildStateQuery(appliedFilters));
       setRecords(data);
     } catch (loadError) {
       setRecords([]);
@@ -145,20 +220,99 @@ export function GcanVehicleCanStatePage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [appliedFilters]);
 
   useEffect(() => {
     void loadRecords();
   }, [loadRecords]);
 
-  const columns = useMemo(() => createStateColumns(), []);
+  const setFilter = <K extends keyof StateFilterState>(
+    key: K,
+    value: StateFilterState[K],
+  ) => {
+    setFilters((current) => ({ ...current, [key]: value }));
+  };
+
+  const submitFilters = () => {
+    setAppliedFilters(filters);
+  };
+
+  const resetFilters = () => {
+    setFilters(DEFAULT_FILTERS);
+    setAppliedFilters(DEFAULT_FILTERS);
+  };
+
+  const columns = useMemo(
+    () => createStateColumns(mineLabelMap, vehicleTypeLabelMap),
+    [mineLabelMap, vehicleTypeLabelMap],
+  );
 
   return (
     <div>
       <PageHeader
         title="车辆 CAN 状态"
-        description="查看当前车辆的实时 CAN 状态快照，仅供只读查看。"
+        description="查看并筛选当前车辆的实时 CAN 状态快照。"
       />
+
+      <SearchFilterBar
+        actions={
+          <>
+            <Button variant="secondary" onClick={submitFilters}>
+              <Search className="h-4 w-4" aria-hidden />
+              查询
+            </Button>
+            <Button variant="secondary" onClick={resetFilters}>
+              <RotateCcw className="h-4 w-4" aria-hidden />
+              重置
+            </Button>
+          </>
+        }
+      >
+        <Input
+          placeholder="车辆名称"
+          value={filters.vehicleName}
+          onChange={(event) => setFilter("vehicleName", event.target.value)}
+        />
+        <Input
+          placeholder="盒子 ID(HEX)"
+          value={filters.boxIdHex}
+          onChange={(event) => setFilter("boxIdHex", event.target.value)}
+        />
+        <Select
+          value={filters.mineId}
+          disabled={mineDict.loading}
+          onChange={(event) => setFilter("mineId", event.target.value)}
+        >
+          <option value="">全部煤矿</option>
+          {mineDict.options.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          value={filters.vehicleType}
+          disabled={vehicleTypeDict.loading}
+          onChange={(event) => setFilter("vehicleType", event.target.value)}
+        >
+          <option value="">全部车型</option>
+          {vehicleTypeDict.options.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </Select>
+        <Select
+          value={filters.online}
+          onChange={(event) =>
+            setFilter("online", event.target.value as StateFilterState["online"])
+          }
+        >
+          <option value="all">全部在线状态</option>
+          <option value="online">在线</option>
+          <option value="offline">离线</option>
+        </Select>
+      </SearchFilterBar>
 
       <div className="rounded-admin border border-border bg-surface shadow-admin">
         <TableToolbar

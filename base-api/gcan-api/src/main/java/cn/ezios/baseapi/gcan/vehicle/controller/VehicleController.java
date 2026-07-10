@@ -7,7 +7,6 @@ import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
 import cn.ezios.baseapi.gcan.vehicle.service.VehicleService;
-import cn.ezios.baseapi.gcan.vehicle.vo.VehicleTypeVO;
 import cn.ezios.baseapi.gcan.vehicle.vo.VehicleVO;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -41,11 +40,6 @@ public class VehicleController {
     @GetMapping("/enabled")
     public ApiResponse<List<VehicleVO>> enabled() {
         return ApiResponse.success(vehicleService.listEnabled());
-    }
-
-    @GetMapping("/types")
-    public ApiResponse<List<VehicleTypeVO>> vehicleTypes() {
-        return ApiResponse.success(vehicleService.vehicleTypes());
     }
 
     @GetMapping("/{id}")

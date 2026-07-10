@@ -13,12 +13,11 @@ import cn.ezios.baseapi.gcan.history.service.CanHistoryService;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.RawCanFrameSnapshotStore;
 import cn.ezios.baseapi.gcan.state.VehicleCanStateStore;
-import cn.ezios.baseapi.gcan.vehicle.VehicleType;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
+import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
 import cn.ezios.baseapi.gcan.vehicle.service.VehicleService;
-import cn.ezios.baseapi.gcan.vehicle.vo.VehicleTypeVO;
 import cn.ezios.baseapi.gcan.vehicle.vo.VehicleVO;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -60,6 +59,22 @@ class GcanProcessingSchedulerTest {
         assertFalse(stateStore.get(1L).getOnline());
     }
 
+    @Test
+    void refreshVehicleCanStatesMarksUnsupportedParserWhenVehicleTypeHasNoHandler() {
+        RawCanFrameSnapshotStore rawStore = new RawCanFrameSnapshotStore();
+        VehicleCanStateStore stateStore = new VehicleCanStateStore();
+        GcanVehicle vehicle = vehicle();
+        vehicle.setVehicleType("FUTURE_TYPE");
+        MutableVehicleService vehicleService = new MutableVehicleService(vehicle);
+        GcanProcessingScheduler scheduler = scheduler(rawStore, stateStore, vehicleService);
+
+        rawStore.put(frame(LocalDateTime.now()));
+        scheduler.refreshVehicleCanStates();
+
+        assertTrue(stateStore.get(1L).getOnline());
+        assertFalse(stateStore.get(1L).getParseSupported());
+    }
+
     private GcanProcessingScheduler scheduler(RawCanFrameSnapshotStore rawStore,
                                               VehicleCanStateStore stateStore,
                                               VehicleService vehicleService) {
@@ -78,7 +93,8 @@ class GcanProcessingSchedulerTest {
         GcanVehicle vehicle = new GcanVehicle();
         vehicle.setId(1L);
         vehicle.setVehicleName("测试车辆");
-        vehicle.setVehicleType(VehicleType.LIAO_1_9T.name());
+        vehicle.setMineId("MINE_TEST");
+        vehicle.setVehicleType("LIAO_1_9T");
         vehicle.setBoxIdHex("01");
         vehicle.setBoxIdDec(1);
         vehicle.setStatus(1);
@@ -108,6 +124,16 @@ class GcanProcessingSchedulerTest {
         }
 
         @Override
+        public Map<String, GcanVehicle> enabledByBoxIdHex(VehicleLookupQuery query) {
+            return enabledByBoxIdHex();
+        }
+
+        @Override
+        public Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query) {
+            return enabledByBoxIdHex();
+        }
+
+        @Override
         public PageResult<VehicleVO> page(VehiclePageQuery query) {
             throw new UnsupportedOperationException();
         }
@@ -119,11 +145,6 @@ class GcanProcessingSchedulerTest {
 
         @Override
         public VehicleVO getDetail(Long id) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public List<VehicleTypeVO> vehicleTypes() {
             throw new UnsupportedOperationException();
         }
 

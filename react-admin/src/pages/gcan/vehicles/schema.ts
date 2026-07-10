@@ -3,6 +3,7 @@ import type { ApiStatus, GcanVehicleRecord } from "@/types";
 
 export type VehicleFilterState = {
   vehicleName: string;
+  mineId: string;
   vehicleType: string;
   boxIdHex: string;
   status: "all" | ApiStatus;
@@ -12,6 +13,7 @@ export type VehicleFormMode = "create" | "edit";
 
 export const DEFAULT_FILTERS: VehicleFilterState = {
   vehicleName: "",
+  mineId: "",
   vehicleType: "",
   boxIdHex: "",
   status: "all",
@@ -25,6 +27,7 @@ export const vehicleFormSchema = z.object({
     .trim()
     .min(1, "车辆名称不能为空")
     .max(100, "车辆名称不能超过 100 个字符"),
+  mineId: z.string().trim().min(1, "煤矿不能为空").max(100, "煤矿ID不能超过 100 个字符"),
   vehicleType: z.string().trim().min(1, "车辆类型不能为空"),
   boxIdHex: z
     .string()
@@ -47,6 +50,7 @@ export function buildVehicleQuery(
     page,
     pageSize,
     vehicleName: filters.vehicleName.trim() || undefined,
+    mineId: filters.mineId.trim() || undefined,
     vehicleType: filters.vehicleType.trim() || undefined,
     boxIdHex: filters.boxIdHex.trim() || undefined,
     status: filters.status === "all" ? undefined : filters.status,
@@ -56,6 +60,7 @@ export function buildVehicleQuery(
 export function toVehicleFormValues(vehicle?: GcanVehicleRecord): VehicleFormValues {
   return {
     vehicleName: vehicle?.vehicleName ?? "",
+    mineId: vehicle?.mineId ?? "",
     vehicleType: vehicle?.vehicleType ?? "",
     boxIdHex: vehicle?.boxIdHex ?? "",
     status: vehicle?.status ?? 1,
@@ -66,7 +71,8 @@ export function toVehicleFormValues(vehicle?: GcanVehicleRecord): VehicleFormVal
 export function buildVehiclePayload(values: VehicleFormValues) {
   return {
     vehicleName: values.vehicleName.trim(),
-    vehicleType: values.vehicleType.trim(),
+    mineId: values.mineId.trim(),
+    vehicleType: values.vehicleType.trim().toUpperCase(),
     boxIdHex: values.boxIdHex.trim().toUpperCase(),
     status: values.status,
     remark: values.remark?.trim() || undefined,

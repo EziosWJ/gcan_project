@@ -4,9 +4,9 @@ import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
 import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
+import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
-import cn.ezios.baseapi.gcan.vehicle.vo.VehicleTypeVO;
 import cn.ezios.baseapi.gcan.vehicle.vo.VehicleVO;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +19,11 @@ public interface VehicleService {
 
     Map<String, GcanVehicle> enabledByBoxIdHex();
 
-    VehicleVO getDetail(Long id);
+    Map<String, GcanVehicle> enabledByBoxIdHex(VehicleLookupQuery query);
 
-    List<VehicleTypeVO> vehicleTypes();
+    Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query);
+
+    VehicleVO getDetail(Long id);
 
     void create(VehicleSaveRequest request);
 

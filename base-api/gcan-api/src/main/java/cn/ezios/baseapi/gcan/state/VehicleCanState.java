@@ -9,11 +9,14 @@ public class VehicleCanState {
 
     private Long vehicleId;
     private String vehicleName;
+    private String mineId;
     private String vehicleType;
     private String vehicleTypeLabel;
     private String boxIdHex;
     private Integer boxIdDec;
     private Boolean online;
+    private Boolean parseSupported = true;
+    private String parseMessage;
     private LocalDateTime lastReceivedAt;
     private LocalDateTime updateTime;
 

@@ -1,13 +1,9 @@
 import type { ApiPageRequest, ApiStatus } from "./api";
 
-export type GcanVehicleTypeRecord = {
-  code: string;
-  label: string;
-};
-
 export type GcanVehicleRecord = {
   id: number;
   vehicleName: string;
+  mineId: string;
   vehicleType: string;
   vehicleTypeLabel?: string;
   boxIdHex: string;
@@ -20,6 +16,7 @@ export type GcanVehicleRecord = {
 
 export type GcanVehiclePageQuery = Partial<ApiPageRequest> & {
   vehicleName?: string;
+  mineId?: string;
   vehicleType?: string;
   boxIdHex?: string;
   status?: ApiStatus;
@@ -27,6 +24,7 @@ export type GcanVehiclePageQuery = Partial<ApiPageRequest> & {
 
 export type GcanVehicleSaveRequest = {
   vehicleName: string;
+  mineId: string;
   vehicleType: string;
   boxIdHex: string;
   status?: ApiStatus;
@@ -44,11 +42,14 @@ export type GcanVehicleBatchDeleteRequest = {
 export type GcanVehicleCanStateRecord = {
   vehicleId: number;
   vehicleName: string;
+  mineId?: string | null;
   vehicleType: string;
   vehicleTypeLabel?: string;
   boxIdHex: string;
   boxIdDec: number;
   online: boolean;
+  parseSupported?: boolean | null;
+  parseMessage?: string | null;
   lastReceivedAt?: string | null;
   updateTime?: string | null;
   highVoltage?: number | string | null;
@@ -98,9 +99,21 @@ export type GcanVehicleCanStateRecord = {
   readyState?: string | null;
 };
 
+export type GcanVehicleCanStateQuery = {
+  vehicleName?: string;
+  mineId?: string;
+  vehicleType?: string;
+  boxIdHex?: string;
+  online?: boolean;
+};
+
 export type GcanByteFormat = "hex" | "bin" | "decimal";
 
 export type GcanRawFrameRecord = {
+  vehicleId?: number | null;
+  vehicleName?: string | null;
+  mineId?: string | null;
+  vehicleType?: string | null;
   boxIdHex: string;
   boxIdDec: number;
   canId: string;
@@ -108,3 +121,16 @@ export type GcanRawFrameRecord = {
   receivedAt?: string | null;
 };
 
+export type GcanRawFrameQuery = {
+  vehicleName?: string;
+  mineId?: string;
+  vehicleType?: string;
+  boxIdHex?: string;
+  canId?: string;
+};
+
+export type GcanRawFrameHistoryQuery = Partial<ApiPageRequest> &
+  GcanRawFrameQuery & {
+    receivedStart?: string;
+    receivedEnd?: string;
+  };

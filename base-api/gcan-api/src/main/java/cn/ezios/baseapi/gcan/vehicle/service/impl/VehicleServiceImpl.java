@@ -6,18 +6,17 @@ import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
 import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.gcan.common.BoxIdUtil;
-import cn.ezios.baseapi.gcan.vehicle.VehicleType;
+import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
 import cn.ezios.baseapi.gcan.vehicle.mapper.GcanVehicleMapper;
 import cn.ezios.baseapi.gcan.vehicle.service.VehicleService;
-import cn.ezios.baseapi.gcan.vehicle.vo.VehicleTypeVO;
 import cn.ezios.baseapi.gcan.vehicle.vo.VehicleVO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,7 +42,8 @@ public class VehicleServiceImpl implements VehicleService {
         Page<GcanVehicle> page = vehicleMapper.selectPage(Page.of(query.getPage(), query.getPageSize()),
                 new LambdaQueryWrapper<GcanVehicle>()
                         .like(StringUtils.hasText(query.getVehicleName()), GcanVehicle::getVehicleName, query.getVehicleName())
-                        .eq(StringUtils.hasText(query.getVehicleType()), GcanVehicle::getVehicleType, query.getVehicleType())
+                        .eq(StringUtils.hasText(query.getMineId()), GcanVehicle::getMineId, query.getMineId())
+                        .eq(StringUtils.hasText(query.getVehicleType()), GcanVehicle::getVehicleType, normalizeVehicleType(query.getVehicleType()))
                         .eq(StringUtils.hasText(boxIdHex), GcanVehicle::getBoxIdHex, boxIdHex)
                         .eq(query.getStatus() != null, GcanVehicle::getStatus, query.getStatus())
                         .orderByDesc(GcanVehicle::getId));
@@ -58,7 +58,17 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Override
     public Map<String, GcanVehicle> enabledByBoxIdHex() {
-        return selectEnabled().stream().collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
+        return enabledByBoxIdHex(new VehicleLookupQuery());
+    }
+
+    @Override
+    public Map<String, GcanVehicle> enabledByBoxIdHex(VehicleLookupQuery query) {
+        return selectEnabled(query).stream().collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
+    }
+
+    @Override
+    public Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query) {
+        return selectByLookup(query).stream().collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
     }
 
     @Override
@@ -67,20 +77,14 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
-    public List<VehicleTypeVO> vehicleTypes() {
-        return Arrays.stream(VehicleType.values())
-                .map(type -> new VehicleTypeVO(type.getCode(), type.getLabel()))
-                .toList();
-    }
-
-    @Override
     @Transactional(rollbackFor = Exception.class)
     public void create(VehicleSaveRequest request) {
-        VehicleType.requireValid(request.getVehicleType());
         String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
         ensureBoxUnique(boxIdHex, null);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
+        vehicle.setMineId(request.getMineId().trim());
+        vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
         vehicle.setBoxIdHex(boxIdHex);
         vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
         vehicle.setStatus(request.getStatus() == null ? STATUS_ENABLED : request.getStatus());
@@ -91,12 +95,13 @@ public class VehicleServiceImpl implements VehicleService {
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, VehicleSaveRequest request) {
         requireVehicle(id);
-        VehicleType.requireValid(request.getVehicleType());
         String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
         ensureBoxUnique(boxIdHex, id);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
         vehicle.setId(id);
+        vehicle.setMineId(request.getMineId().trim());
+        vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
         vehicle.setBoxIdHex(boxIdHex);
         vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
         vehicleMapper.updateById(vehicle);
@@ -130,9 +135,26 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     private List<GcanVehicle> selectEnabled() {
-        return vehicleMapper.selectList(new LambdaQueryWrapper<GcanVehicle>()
-                .eq(GcanVehicle::getStatus, STATUS_ENABLED)
-                .orderByDesc(GcanVehicle::getId));
+        return selectEnabled(new VehicleLookupQuery());
+    }
+
+    private List<GcanVehicle> selectEnabled(VehicleLookupQuery query) {
+        return vehicleMapper.selectList(lookupWrapper(query)
+                .eq(GcanVehicle::getStatus, STATUS_ENABLED));
+    }
+
+    private List<GcanVehicle> selectByLookup(VehicleLookupQuery query) {
+        return vehicleMapper.selectList(lookupWrapper(query));
+    }
+
+    private LambdaQueryWrapper<GcanVehicle> lookupWrapper(VehicleLookupQuery query) {
+        String boxIdHex = StringUtils.hasText(query.getBoxIdHex()) ? BoxIdUtil.normalizeHex(query.getBoxIdHex()) : null;
+        return new LambdaQueryWrapper<GcanVehicle>()
+                .like(StringUtils.hasText(query.getVehicleName()), GcanVehicle::getVehicleName, query.getVehicleName())
+                .eq(StringUtils.hasText(query.getMineId()), GcanVehicle::getMineId, query.getMineId())
+                .eq(StringUtils.hasText(query.getVehicleType()), GcanVehicle::getVehicleType, normalizeVehicleType(query.getVehicleType()))
+                .eq(StringUtils.hasText(boxIdHex), GcanVehicle::getBoxIdHex, boxIdHex)
+                .orderByDesc(GcanVehicle::getId);
     }
 
     private GcanVehicle requireVehicle(Long id) {
@@ -155,11 +177,11 @@ public class VehicleServiceImpl implements VehicleService {
     private VehicleVO toVO(GcanVehicle vehicle) {
         VehicleVO vo = new VehicleVO();
         BeanUtils.copyProperties(vehicle, vo);
-        try {
-            vo.setVehicleTypeLabel(VehicleType.valueOf(vehicle.getVehicleType()).getLabel());
-        } catch (IllegalArgumentException e) {
-            vo.setVehicleTypeLabel(vehicle.getVehicleType());
-        }
+        vo.setVehicleTypeLabel(vehicle.getVehicleType());
         return vo;
+    }
+
+    private String normalizeVehicleType(String vehicleType) {
+        return vehicleType == null ? null : vehicleType.trim().toUpperCase(Locale.ROOT);
     }
 }

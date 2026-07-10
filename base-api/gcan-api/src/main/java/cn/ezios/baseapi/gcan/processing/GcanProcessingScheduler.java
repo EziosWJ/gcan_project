@@ -7,7 +7,6 @@ import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.RawCanFrameSnapshotStore;
 import cn.ezios.baseapi.gcan.state.VehicleCanState;
 import cn.ezios.baseapi.gcan.state.VehicleCanStateStore;
-import cn.ezios.baseapi.gcan.vehicle.VehicleType;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
 import cn.ezios.baseapi.gcan.vehicle.service.VehicleService;
 import java.time.Duration;
@@ -74,7 +73,7 @@ public class GcanProcessingScheduler {
                         state.setOnline(true);
                         state.setLastReceivedAt(newest);
                         vehicleCanStateStore.put(state);
-                    }, () -> log.warn("未找到车辆类型 {} 的协议解析器", vehicle.getVehicleType()));
+                    }, () -> markUnsupported(vehicle, newest));
         }
     }
 
@@ -94,12 +93,31 @@ public class GcanProcessingScheduler {
             state = new VehicleCanState();
             state.setVehicleId(vehicle.getId());
             state.setVehicleName(vehicle.getVehicleName());
+            state.setMineId(vehicle.getMineId());
             state.setVehicleType(vehicle.getVehicleType());
-            state.setVehicleTypeLabel(VehicleType.valueOf(vehicle.getVehicleType()).getLabel());
+            state.setVehicleTypeLabel(vehicle.getVehicleType());
             state.setBoxIdHex(vehicle.getBoxIdHex());
             state.setBoxIdDec(vehicle.getBoxIdDec());
         }
         state.setOnline(false);
+        state.setLastReceivedAt(newest);
+        state.setUpdateTime(LocalDateTime.now());
+        vehicleCanStateStore.put(state);
+    }
+
+    private void markUnsupported(GcanVehicle vehicle, LocalDateTime newest) {
+        log.warn("未找到车辆类型 {} 的协议解析器", vehicle.getVehicleType());
+        VehicleCanState state = new VehicleCanState();
+        state.setVehicleId(vehicle.getId());
+        state.setVehicleName(vehicle.getVehicleName());
+        state.setMineId(vehicle.getMineId());
+        state.setVehicleType(vehicle.getVehicleType());
+        state.setVehicleTypeLabel(vehicle.getVehicleType());
+        state.setBoxIdHex(vehicle.getBoxIdHex());
+        state.setBoxIdDec(vehicle.getBoxIdDec());
+        state.setOnline(true);
+        state.setParseSupported(false);
+        state.setParseMessage("未支持解析");
         state.setLastReceivedAt(newest);
         state.setUpdateTime(LocalDateTime.now());
         vehicleCanStateStore.put(state);

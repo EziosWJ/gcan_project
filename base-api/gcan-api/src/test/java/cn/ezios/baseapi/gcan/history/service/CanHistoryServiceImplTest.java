@@ -1,30 +1,26 @@
 package cn.ezios.baseapi.gcan.history.service;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-
 import cn.ezios.baseapi.gcan.config.GcanProperties;
 import cn.ezios.baseapi.gcan.history.entity.GcanCanHistory;
 import cn.ezios.baseapi.gcan.history.mapper.GcanCanHistoryMapper;
 import cn.ezios.baseapi.gcan.history.service.impl.CanHistoryServiceImpl;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
+import java.lang.reflect.Proxy;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 class CanHistoryServiceImplTest {
 
     @Test
     void storeNewFramesHonorsCanIdFilterAndWatermark() {
-        GcanCanHistoryMapper mapper = Mockito.mock(GcanCanHistoryMapper.class);
+        CapturingHistoryMapper mapper = new CapturingHistoryMapper();
         GcanProperties properties = properties(true, List.of("1836FF30"));
-        CanHistoryServiceImpl service = new CanHistoryServiceImpl(mapper, properties);
+        CanHistoryServiceImpl service = new CanHistoryServiceImpl(mapper.proxy(), properties);
         GcanVehicle vehicle = vehicle();
         LocalDateTime receivedAt = LocalDateTime.now();
 
@@ -34,25 +30,24 @@ class CanHistoryServiceImplTest {
         service.storeNewFrames(List.of(included, excluded), Map.of("01", vehicle));
         service.storeNewFrames(List.of(included), Map.of("01", vehicle));
 
-        ArgumentCaptor<GcanCanHistory> captor = ArgumentCaptor.forClass(GcanCanHistory.class);
-        verify(mapper, times(1)).insert(captor.capture());
-        GcanCanHistory history = captor.getValue();
-        org.junit.jupiter.api.Assertions.assertEquals(vehicle.getId(), history.getVehicleId());
-        org.junit.jupiter.api.Assertions.assertEquals("01", history.getBoxIdHex());
-        org.junit.jupiter.api.Assertions.assertEquals("1836FF30", history.getCanId());
-        org.junit.jupiter.api.Assertions.assertEquals(receivedAt, history.getReceivedAt());
+        Assertions.assertEquals(1, mapper.inserted().size());
+        GcanCanHistory history = mapper.inserted().getFirst();
+        Assertions.assertEquals(vehicle.getId(), history.getVehicleId());
+        Assertions.assertEquals("01", history.getBoxIdHex());
+        Assertions.assertEquals("1836FF30", history.getCanId());
+        Assertions.assertEquals(receivedAt, history.getReceivedAt());
     }
 
     @Test
     void storeNewFramesSkipsDisabledHistoryAndUnboundBoxes() {
-        GcanCanHistoryMapper mapper = Mockito.mock(GcanCanHistoryMapper.class);
-        CanHistoryServiceImpl disabled = new CanHistoryServiceImpl(mapper, properties(false, List.of()));
+        CapturingHistoryMapper mapper = new CapturingHistoryMapper();
+        CanHistoryServiceImpl disabled = new CanHistoryServiceImpl(mapper.proxy(), properties(false, List.of()));
         disabled.storeNewFrames(List.of(frame("1836FF30", LocalDateTime.now())), Map.of("01", vehicle()));
 
-        CanHistoryServiceImpl enabled = new CanHistoryServiceImpl(mapper, properties(true, List.of()));
+        CanHistoryServiceImpl enabled = new CanHistoryServiceImpl(mapper.proxy(), properties(true, List.of()));
         enabled.storeNewFrames(List.of(frame("1836FF30", LocalDateTime.now())), Map.of());
 
-        verify(mapper, never()).insert(any(GcanCanHistory.class));
+        Assertions.assertTrue(mapper.inserted().isEmpty());
     }
 
     private GcanProperties properties(boolean enabled, List<String> includedCanIds) {
@@ -72,5 +67,26 @@ class CanHistoryServiceImplTest {
 
     private RawCanFrame frame(String canId, LocalDateTime receivedAt) {
         return new RawCanFrame("01", 1, canId, new int[]{1, 2, 3, 4, 5, 6, 7, 8}, receivedAt);
+    }
+
+    private static class CapturingHistoryMapper {
+        private final List<GcanCanHistory> inserted = new ArrayList<>();
+
+        GcanCanHistoryMapper proxy() {
+            return (GcanCanHistoryMapper) Proxy.newProxyInstance(
+                    GcanCanHistoryMapper.class.getClassLoader(),
+                    new Class<?>[]{GcanCanHistoryMapper.class},
+                    (proxy, method, args) -> {
+                        if ("insert".equals(method.getName())) {
+                            inserted.add((GcanCanHistory) args[0]);
+                            return 1;
+                        }
+                        throw new UnsupportedOperationException(method.getName());
+                    });
+        }
+
+        List<GcanCanHistory> inserted() {
+            return inserted;
+        }
     }
 }
