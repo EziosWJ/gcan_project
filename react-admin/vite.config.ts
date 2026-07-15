@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
+      "/api/open/gcan": {
+        target: "http://localhost:8081",
+        changeOrigin: true,
+      },
       "/api/gcan": {
         target: "http://localhost:8081",
         changeOrigin: true,
