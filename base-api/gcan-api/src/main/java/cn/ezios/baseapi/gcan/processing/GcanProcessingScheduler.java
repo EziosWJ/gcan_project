@@ -58,6 +58,7 @@ public class GcanProcessingScheduler {
         for (GcanVehicle vehicle : enabledVehiclesByBox.values()) {
             List<RawCanFrame> frames = rawFrameSnapshotStore.currentFramesByBox(vehicle.getBoxIdHex());
             if (frames.isEmpty()) {
+                markNoData(vehicle);
                 continue;
             }
             LocalDateTime newest = newestReceivedAt(frames);
@@ -71,6 +72,8 @@ public class GcanProcessingScheduler {
                     .ifPresentOrElse(handler -> {
                         VehicleCanState state = handler.handle(frames, vehicle);
                         state.setOnline(true);
+                        state.setConnectionStatus("ONLINE");
+                        state.setParseStatus("SUPPORTED");
                         state.setLastReceivedAt(newest);
                         vehicleCanStateStore.put(state);
                     }, () -> markUnsupported(vehicle, newest));
@@ -100,6 +103,7 @@ public class GcanProcessingScheduler {
             state.setBoxIdDec(vehicle.getBoxIdDec());
         }
         state.setOnline(false);
+        state.setConnectionStatus("OFFLINE");
         state.setLastReceivedAt(newest);
         state.setUpdateTime(LocalDateTime.now());
         vehicleCanStateStore.put(state);
@@ -117,8 +121,29 @@ public class GcanProcessingScheduler {
         state.setBoxIdDec(vehicle.getBoxIdDec());
         state.setOnline(true);
         state.setParseSupported(false);
+        state.setConnectionStatus("ONLINE");
+        state.setParseStatus("UNSUPPORTED");
         state.setParseMessage("未支持解析");
         state.setLastReceivedAt(newest);
+        state.setUpdateTime(LocalDateTime.now());
+        vehicleCanStateStore.put(state);
+    }
+
+    private void markNoData(GcanVehicle vehicle) {
+        VehicleCanState state = new VehicleCanState();
+        state.setVehicleId(vehicle.getId());
+        state.setVehicleName(vehicle.getVehicleName());
+        state.setMineId(vehicle.getMineId());
+        state.setVehicleType(vehicle.getVehicleType());
+        state.setVehicleTypeLabel(vehicle.getVehicleType());
+        state.setBoxIdHex(vehicle.getBoxIdHex());
+        state.setBoxIdDec(vehicle.getBoxIdDec());
+        state.setOnline(false);
+        state.setConnectionStatus("NO_DATA");
+        boolean supported = handlers.stream().anyMatch(handler -> handler.canHandle(vehicle.getVehicleType()));
+        state.setParseStatus(supported ? "SUPPORTED" : "UNSUPPORTED");
+        state.setParseSupported(supported);
+        state.setParseMessage(supported ? "暂无数据" : "未支持解析");
         state.setUpdateTime(LocalDateTime.now());
         vehicleCanStateStore.put(state);
     }

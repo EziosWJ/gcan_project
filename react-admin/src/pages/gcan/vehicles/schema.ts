@@ -29,6 +29,7 @@ export const vehicleFormSchema = z.object({
     .max(100, "车辆名称不能超过 100 个字符"),
   mineId: z.string().trim().min(1, "煤矿不能为空").max(100, "煤矿ID不能超过 100 个字符"),
   vehicleType: z.string().trim().min(1, "车辆类型不能为空"),
+  faultProfileCode: z.string().trim().max(100, "故障码表编码不能超过 100 个字符").optional(),
   boxIdHex: z
     .string()
     .trim()
@@ -62,6 +63,7 @@ export function toVehicleFormValues(vehicle?: GcanVehicleRecord): VehicleFormVal
     vehicleName: vehicle?.vehicleName ?? "",
     mineId: vehicle?.mineId ?? "",
     vehicleType: vehicle?.vehicleType ?? "",
+    faultProfileCode: vehicle?.faultProfileCode ?? "",
     boxIdHex: vehicle?.boxIdHex ?? "",
     status: vehicle?.status ?? 1,
     remark: vehicle?.remark ?? "",
@@ -73,6 +75,7 @@ export function buildVehiclePayload(values: VehicleFormValues) {
     vehicleName: values.vehicleName.trim(),
     mineId: values.mineId.trim(),
     vehicleType: values.vehicleType.trim().toUpperCase(),
+    faultProfileCode: values.faultProfileCode?.trim() || undefined,
     boxIdHex: values.boxIdHex.trim().toUpperCase(),
     status: values.status,
     remark: values.remark?.trim() || undefined,

@@ -6,6 +6,7 @@ export type GcanVehicleRecord = {
   mineId: string;
   vehicleType: string;
   vehicleTypeLabel?: string;
+  faultProfileCode?: string | null;
   boxIdHex: string;
   boxIdDec: number;
   status: ApiStatus;
@@ -26,6 +27,7 @@ export type GcanVehicleSaveRequest = {
   vehicleName: string;
   mineId: string;
   vehicleType: string;
+  faultProfileCode?: string;
   boxIdHex: string;
   status?: ApiStatus;
   remark?: string;

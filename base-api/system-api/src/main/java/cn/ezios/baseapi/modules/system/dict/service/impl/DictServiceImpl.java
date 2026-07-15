@@ -9,6 +9,9 @@ import cn.ezios.baseapi.modules.system.dict.dto.DictDataPageQuery;
 import cn.ezios.baseapi.modules.system.dict.dto.DictDataSaveRequest;
 import cn.ezios.baseapi.modules.system.dict.dto.DictTypePageQuery;
 import cn.ezios.baseapi.modules.system.dict.dto.DictTypeSaveRequest;
+import cn.ezios.baseapi.modules.system.dict.contract.GcanDictionaryCodes;
+import cn.ezios.baseapi.modules.system.dict.contract.GcanDictionaryItemVO;
+import cn.ezios.baseapi.modules.system.dict.contract.GcanDictionaryVO;
 import cn.ezios.baseapi.modules.system.dict.entity.SysDictData;
 import cn.ezios.baseapi.modules.system.dict.entity.SysDictType;
 import cn.ezios.baseapi.modules.system.dict.mapper.SysDictDataMapper;
@@ -195,6 +198,22 @@ public class DictServiceImpl implements DictService {
                     return vo;
                 })
                 .toList();
+    }
+
+    @Override
+    public List<GcanDictionaryVO> gcanItems() {
+        return GcanDictionaryCodes.ALL.stream().map(dictCode -> {
+            GcanDictionaryVO dictionary = new GcanDictionaryVO();
+            dictionary.setDictCode(dictCode);
+            dictionary.setItems(items(dictCode).stream().map(item -> {
+                GcanDictionaryItemVO contractItem = new GcanDictionaryItemVO();
+                contractItem.setCode(item.getValue());
+                contractItem.setName(item.getLabel());
+                contractItem.setSortOrder(item.getSortOrder());
+                return contractItem;
+            }).toList());
+            return dictionary;
+        }).toList();
     }
 
     private SysDictType requireType(Long id) {

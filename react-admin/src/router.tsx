@@ -13,6 +13,8 @@ import { GcanHexDecConverterPage } from "@/pages/gcan/hex-dec-converter";
 import { GcanRawFramesPage } from "@/pages/gcan/raw-frames";
 import { GcanVehicleCanStatePage } from "@/pages/gcan/vehicle-can-state";
 import { GcanVehiclesPage } from "@/pages/gcan/vehicles";
+import { GcanFaultDefinitionsPage } from "@/pages/gcan/fault-definitions";
+import { GcanFaultProfilesPage } from "@/pages/gcan/fault-profiles";
 import { TreeDemoPage } from "@/pages/examples/tree-demo";
 import { TreeTableDemoPage } from "@/pages/examples/tree-table-demo";
 import { LoginPage } from "@/pages/login";
@@ -27,8 +29,13 @@ import { SystemOperLogsPage } from "@/pages/system/logs/oper-logs";
 import { SystemMenusPage } from "@/pages/system/menus";
 import { SystemRolesPage } from "@/pages/system/roles";
 import { UsersPage } from "@/pages/system/users";
+import { GcanMonitorPage } from "@/pages/gcan/monitor";
 
 export const router = createBrowserRouter([
+  {
+    path: "/gcan/monitor",
+    element: <GcanMonitorPage />,
+  },
   {
     path: "/login",
     element: <LoginPage />,
@@ -88,6 +95,14 @@ export const router = createBrowserRouter([
       {
         path: "gcan/vehicle-types",
         element: <GcanVehicleTypesPage />,
+      },
+      {
+        path: "gcan/fault-profiles",
+        element: <GcanFaultProfilesPage />,
+      },
+      {
+        path: "gcan/fault-definitions",
+        element: <GcanFaultDefinitionsPage />,
       },
       {
         path: "gcan/vehicle-can-state",

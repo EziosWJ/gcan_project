@@ -1,6 +1,7 @@
 package cn.ezios.baseapi.gcan.processing;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -73,6 +74,20 @@ class GcanProcessingSchedulerTest {
 
         assertTrue(stateStore.get(1L).getOnline());
         assertFalse(stateStore.get(1L).getParseSupported());
+    }
+
+    @Test
+    void refreshVehicleCanStatesCreatesNoDataStateForEnabledVehicleWithoutFrames() {
+        RawCanFrameSnapshotStore rawStore = new RawCanFrameSnapshotStore();
+        VehicleCanStateStore stateStore = new VehicleCanStateStore();
+        MutableVehicleService vehicleService = new MutableVehicleService(vehicle());
+        GcanProcessingScheduler scheduler = scheduler(rawStore, stateStore, vehicleService);
+
+        scheduler.refreshVehicleCanStates();
+
+        assertEquals("NO_DATA", stateStore.get(1L).getConnectionStatus());
+        assertEquals("SUPPORTED", stateStore.get(1L).getParseStatus());
+        assertEquals("暂无数据", stateStore.get(1L).getParseMessage());
     }
 
     private GcanProcessingScheduler scheduler(RawCanFrameSnapshotStore rawStore,

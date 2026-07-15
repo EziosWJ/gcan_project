@@ -6,6 +6,8 @@ import cn.ezios.baseapi.common.model.BatchIdsRequest;
 import cn.ezios.baseapi.common.model.PageResult;
 import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.gcan.common.BoxIdUtil;
+import cn.ezios.baseapi.gcan.fault.entity.GcanFaultProfile;
+import cn.ezios.baseapi.gcan.fault.service.FaultProfileService;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
@@ -18,6 +20,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
@@ -31,9 +34,11 @@ public class VehicleServiceImpl implements VehicleService {
     private static final int STATUS_ENABLED = 1;
 
     private final GcanVehicleMapper vehicleMapper;
+    private final FaultProfileService faultProfileService;
 
-    public VehicleServiceImpl(GcanVehicleMapper vehicleMapper) {
+    public VehicleServiceImpl(GcanVehicleMapper vehicleMapper, FaultProfileService faultProfileService) {
         this.vehicleMapper = vehicleMapper;
+        this.faultProfileService = faultProfileService;
     }
 
     @Override
@@ -81,10 +86,13 @@ public class VehicleServiceImpl implements VehicleService {
     public void create(VehicleSaveRequest request) {
         String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
         ensureBoxUnique(boxIdHex, null);
+        String faultProfileCode = normalizeFaultProfileCode(request.getFaultProfileCode());
+        validateFaultProfileCode(faultProfileCode, null);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
         vehicle.setMineId(request.getMineId().trim());
         vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
+        vehicle.setFaultProfileCode(faultProfileCode);
         vehicle.setBoxIdHex(boxIdHex);
         vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
         vehicle.setStatus(request.getStatus() == null ? STATUS_ENABLED : request.getStatus());
@@ -94,14 +102,17 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, VehicleSaveRequest request) {
-        requireVehicle(id);
+        GcanVehicle existing = requireVehicle(id);
         String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
         ensureBoxUnique(boxIdHex, id);
+        String faultProfileCode = normalizeFaultProfileCode(request.getFaultProfileCode());
+        validateFaultProfileCode(faultProfileCode, existing);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
         vehicle.setId(id);
         vehicle.setMineId(request.getMineId().trim());
         vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
+        vehicle.setFaultProfileCode(faultProfileCode);
         vehicle.setBoxIdHex(boxIdHex);
         vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
         vehicleMapper.updateById(vehicle);
@@ -183,5 +194,20 @@ public class VehicleServiceImpl implements VehicleService {
 
     private String normalizeVehicleType(String vehicleType) {
         return vehicleType == null ? null : vehicleType.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private void validateFaultProfileCode(String profileCode, GcanVehicle existing) {
+        if (!StringUtils.hasText(profileCode)) {
+            return;
+        }
+        GcanFaultProfile profile = faultProfileService.requireByCode(profileCode);
+        if (!Objects.equals(profile.getStatus(), STATUS_ENABLED)
+                && (existing == null || !Objects.equals(existing.getFaultProfileCode(), profileCode))) {
+            throw new BusinessException("停用的故障码表不能关联新车辆");
+        }
+    }
+
+    private String normalizeFaultProfileCode(String profileCode) {
+        return StringUtils.hasText(profileCode) ? profileCode.trim() : null;
     }
 }

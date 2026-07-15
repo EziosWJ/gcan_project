@@ -91,6 +91,14 @@ export type {
   GcanVehicleSaveRequest,
   GcanVehicleStatusRequest,
 } from "./gcan";
+export type {
+  GcanFaultDefinitionQuery,
+  GcanFaultDefinitionRecord,
+  GcanFaultDefinitionSaveRequest,
+  GcanFaultProfileQuery,
+  GcanFaultProfileRecord,
+  GcanFaultProfileSaveRequest,
+} from "./gcan-fault";
 export type { DataTableColumn } from "./table";
 export type {
   MenuQuery,

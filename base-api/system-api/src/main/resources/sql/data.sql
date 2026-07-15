@@ -27,7 +27,16 @@ VALUES
 (14, 12, '列表页 Demo', 'MENU', '/examples/list', 'examples/list/index', 'Table2', 'examples:list', 2, 1, 1, 1),
 (15, 12, '树形结构 Demo', 'MENU', '/examples/tree', 'examples/tree/index', 'Network', 'examples:tree', 3, 1, 1, 1),
 (16, 12, '左树右表 Demo', 'MENU', '/examples/tree-table', 'examples/tree-table/index', 'PanelLeft', 'examples:tree-table', 4, 1, 1, 1),
-(17, 12, '详情页 Demo', 'MENU', '/examples/detail', 'examples/detail/index', 'FileSearch', 'examples:detail', 5, 1, 1, 1);
+(17, 12, '详情页 Demo', 'MENU', '/examples/detail', 'examples/detail/index', 'FileSearch', 'examples:detail', 5, 1, 1, 1),
+(18, 0, 'GCAN 管理', 'DIR', '/gcan', NULL, 'Boxes', 'gcan', 5, 1, 1, 1),
+(19, 18, '车辆档案', 'MENU', '/gcan/vehicles', 'gcan/vehicles/index', 'Package', 'gcan:vehicle', 1, 1, 1, 1),
+(20, 18, '煤矿维护', 'MENU', '/gcan/mines', 'gcan/mines/index', 'Building2', 'gcan:mine', 2, 1, 1, 1),
+(21, 18, '车型管理', 'MENU', '/gcan/vehicle-types', 'gcan/vehicle-types/index', 'Package', 'gcan:vehicle-type', 3, 1, 1, 1),
+(22, 18, '故障码表维护', 'MENU', '/gcan/fault-profiles', 'gcan/fault-profiles/index', 'ListTree', 'gcan:fault-profile', 4, 1, 1, 1),
+(23, 18, '故障定义维护', 'MENU', '/gcan/fault-definitions', 'gcan/fault-definitions/index', 'ShieldHalf', 'gcan:fault-definition', 5, 1, 1, 1),
+(24, 18, '车辆状态', 'MENU', '/gcan/vehicle-can-state', 'gcan/vehicle-can-state/index', 'MonitorCog', 'gcan:vehicle-state', 6, 1, 1, 1),
+(25, 18, '十六进制转换', 'MENU', '/gcan/hex-dec', 'gcan/hex-dec/index', 'Database', 'gcan:hex-dec', 7, 1, 1, 1),
+(26, 18, '原始 CAN 数据', 'MENU', '/gcan/raw-frames', 'gcan/raw-frames/index', 'FileText', 'gcan:raw-frame', 8, 1, 1, 1);
 
 INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, id FROM sys_menu WHERE deleted = 0;
@@ -70,7 +79,9 @@ VALUES
 (8, '配置类型', 'CONFIG_TYPE', 1, 8, 1, '系统配置归属类型'),
 (9, '配置值类型', 'CONFIG_VALUE_TYPE', 1, 9, 1, '配置值数据类型'),
 (10, 'GCAN煤矿', 'gcan_mine', 1, 10, 1, 'GCAN车辆所属煤矿'),
-(11, 'GCAN车型', 'gcan_vehicle_type', 1, 11, 1, 'GCAN车辆类型编码');
+(11, 'GCAN车型', 'gcan_vehicle_type', 1, 11, 1, 'GCAN车辆类型编码'),
+(12, 'GCAN车辆连接状态', 'gcan_vehicle_connection_status', 1, 12, 1, 'GCAN车辆数据连接状态'),
+(13, 'GCAN车辆解析状态', 'gcan_vehicle_parse_status', 1, 13, 1, 'GCAN车辆类型解析支持状态');
 
 INSERT INTO sys_dict_data (dict_type_id, dict_label, dict_value, sort_order, remark)
 VALUES
@@ -82,7 +93,12 @@ VALUES
 (11, '19座人车', 'REN_19', 1, NULL),
 (11, '19座人车B型', 'REN_19_B', 2, NULL),
 (11, '1.9T料车', 'LIAO_1_9T', 3, NULL),
-(11, '5T料车', 'LIAO_5T', 4, NULL);
+(11, '5T料车', 'LIAO_5T', 4, NULL),
+(12, '在线', 'ONLINE', 1, NULL),
+(12, '离线', 'OFFLINE', 2, NULL),
+(12, '暂无数据', 'NO_DATA', 3, NULL),
+(13, '已支持解析', 'SUPPORTED', 1, NULL),
+(13, '未支持解析', 'UNSUPPORTED', 2, NULL);
 
 INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, value_type, status, is_builtin, remark)
 VALUES

@@ -16,6 +16,12 @@ gcan:
   tcp:
     port: 8000
   frame-stale-threshold-ms: 10000
+  dictionary:
+    base-url: ${GCAN_SYSTEM_API_URL:http://localhost:8080}
+    endpoint: /api/open/gcan/v1/dictionaries
+    refresh-interval-ms: 60000
+    connect-timeout-ms: 2000
+    read-timeout-ms: 3000
   history:
     enabled: true
     store-interval-ms: 3000
@@ -47,8 +53,7 @@ spring:
 
 app:
   cors:
-    allowed-origins:
-      - http://localhost:5173
+    allowed-origins: "*"
 
 ---
 spring:
@@ -58,4 +63,4 @@ spring:
 
 app:
   cors:
-    allowed-origins: []
+    allowed-origins: "*"

@@ -17,6 +17,8 @@ public class VehicleCanState {
     private Boolean online;
     private Boolean parseSupported = true;
     private String parseMessage;
+    private String connectionStatus = "NO_DATA";
+    private String parseStatus = "SUPPORTED";
     private LocalDateTime lastReceivedAt;
     private LocalDateTime updateTime;
 

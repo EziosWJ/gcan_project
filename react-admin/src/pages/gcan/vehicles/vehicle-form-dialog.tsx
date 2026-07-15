@@ -7,6 +7,7 @@ import { Field } from "@/components/common/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import type { GcanFaultProfileRecord } from "@/types/gcan-fault";
 import { Textarea } from "@/components/ui/textarea";
 import type { DictSelectOption } from "@/constants/dicts";
 import type { GcanVehicleRecord } from "@/types";
@@ -31,6 +32,7 @@ type VehicleFormDialogProps = {
   record: GcanVehicleRecord | null;
   mineOptions: DictSelectOption[];
   vehicleTypeOptions: DictSelectOption[];
+  faultProfiles: GcanFaultProfileRecord[];
   submitting: boolean;
   onSubmit: (values: VehicleFormValues) => void;
   onCancel: () => void;
@@ -42,6 +44,7 @@ export function VehicleFormDialog({
   record,
   mineOptions,
   vehicleTypeOptions,
+  faultProfiles,
   submitting,
   onSubmit,
   onCancel,
@@ -144,6 +147,21 @@ export function VehicleFormDialog({
               {vehicleTypeOptions.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
+                </option>
+              ))}
+            </Select>
+          </Field>
+
+          <Field
+            label="故障码表"
+            htmlFor="gcan-fault-profile"
+            help="可暂不关联；未关联时只显示原始故障码"
+          >
+            <Select id="gcan-fault-profile" {...form.register("faultProfileCode")}>
+              <option value="">暂不关联</option>
+              {faultProfiles.map((profile) => (
+                <option key={profile.profileCode} value={profile.profileCode}>
+                  {profile.profileName} · {profile.profileCode}
                 </option>
               ))}
             </Select>

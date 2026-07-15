@@ -11,6 +11,7 @@ public class VehicleVO {
     private String mineId;
     private String vehicleType;
     private String vehicleTypeLabel;
+    private String faultProfileCode;
     private String boxIdHex;
     private Integer boxIdDec;
     private Integer status;

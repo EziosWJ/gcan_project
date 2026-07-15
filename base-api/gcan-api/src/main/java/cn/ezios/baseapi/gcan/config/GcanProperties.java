@@ -11,6 +11,7 @@ public class GcanProperties {
 
     private Tcp tcp = new Tcp();
     private History history = new History();
+    private Dictionary dictionary = new Dictionary();
     private long frameStaleThresholdMs = 10000L;
 
     @Data
@@ -23,5 +24,14 @@ public class GcanProperties {
         private boolean enabled = true;
         private long storeIntervalMs = 3000L;
         private List<String> includedCanIds = new ArrayList<>();
+    }
+
+    @Data
+    public static class Dictionary {
+        private String baseUrl = "http://localhost:8080";
+        private String endpoint = "/api/open/gcan/v1/dictionaries";
+        private long refreshIntervalMs = 60000L;
+        private int connectTimeoutMs = 2000;
+        private int readTimeoutMs = 3000;
     }
 }

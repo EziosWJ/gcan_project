@@ -19,6 +19,9 @@ public class VehicleSaveRequest {
     @Size(max = 50, message = "车辆类型长度不能超过 50")
     private String vehicleType;
 
+    @Size(max = 100, message = "故障码表编码长度不能超过 100")
+    private String faultProfileCode;
+
     @NotBlank(message = "盒子ID(HEX)不能为空")
     private String boxIdHex;
 

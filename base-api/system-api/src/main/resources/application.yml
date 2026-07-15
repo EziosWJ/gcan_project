@@ -33,6 +33,20 @@ sa-token:
   is-read-cookie: false
   auto-renew: true
 
+base:
+  auth:
+    exclude-paths:
+      - /api/auth/login
+      - /doc.html
+      - /webjars/**
+      - /favicon.ico
+      - /swagger-resources/**
+      - /v3/api-docs/**
+      - /swagger-ui/**
+      - /swagger-ui.html
+      - /api/open/gcan/v1/dictionaries
+      - /api/open/gcan/v1/dictionaries/**
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true

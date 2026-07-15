@@ -14,6 +14,7 @@ import {
   updateGcanVehicle,
   updateGcanVehicleStatus,
 } from "@/api/gcan";
+import { getGcanFaultProfilesEnabled } from "@/api/gcan-fault";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
 import { DataTable } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
@@ -30,6 +31,7 @@ import { useDictOptions } from "@/hooks/use-dict-options";
 import { useListPage } from "@/hooks/use-list-page";
 import { getErrorMessage } from "@/lib/api-error";
 import type { ApiStatus, GcanVehicleRecord } from "@/types";
+import type { GcanFaultProfileRecord } from "@/types/gcan-fault";
 import { createVehicleColumns } from "./columns";
 import { VehicleFormDialog } from "./vehicle-form-dialog";
 import {
@@ -79,8 +81,13 @@ export function GcanVehiclesPage() {
   const [formSubmitting, setFormSubmitting] = useState(false);
   const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null);
   const [confirmLoading, setConfirmLoading] = useState(false);
+  const [faultProfiles, setFaultProfiles] = useState<GcanFaultProfileRecord[]>([]);
   const mineDict = useDictOptions(DICT_CODES.GCAN_MINE);
   const vehicleTypeDict = useDictOptions(DICT_CODES.GCAN_VEHICLE_TYPE);
+
+  useEffect(() => {
+    void getGcanFaultProfilesEnabled().then(setFaultProfiles).catch(() => setFaultProfiles([]));
+  }, []);
 
   const mineLabelMap = useMemo(
     () => new Map(mineDict.options.map((item) => [String(item.value), item.label])),
@@ -399,6 +406,7 @@ export function GcanVehiclesPage() {
         record={editingVehicle}
         mineOptions={mineDict.options}
         vehicleTypeOptions={vehicleTypeDict.options}
+        faultProfiles={faultProfiles}
         submitting={formSubmitting}
         onSubmit={submitVehicleForm}
         onCancel={() => setFormOpen(false)}

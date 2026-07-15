@@ -103,48 +103,6 @@ export const defaultNavItems: NavItem[] = [
   },
 ];
 
-function collectNavPaths(items: NavItem[]) {
-  const paths = new Set<string>();
-
-  const walk = (navItems: NavItem[]) => {
-    navItems.forEach((item) => {
-      paths.add(item.path);
-      if (item.externalUrl) paths.add(item.externalUrl);
-      if (item.children?.length) walk(item.children);
-    });
-  };
-
-  walk(items);
-  return paths;
-}
-
-function filterDuplicateNavItems(
-  items: NavItem[],
-  existingPaths: Set<string>,
-): NavItem[] {
-  const nextItems: NavItem[] = [];
-
-  items.forEach((item) => {
-    const key = item.externalUrl ?? item.path;
-    if (existingPaths.has(key)) return;
-
-    existingPaths.add(key);
-
-    const children = item.children?.length
-      ? filterDuplicateNavItems(item.children, existingPaths)
-      : undefined;
-
-    if (item.children?.length && !children?.length) return;
-
-    nextItems.push({
-      ...item,
-      children: children?.length ? children : undefined,
-    });
-  });
-
-  return nextItems;
-}
-
 function toNavItem(menu: CurrentUserMenu): NavItem | null {
   if (menu.visible !== 1) return null;
 
@@ -184,10 +142,28 @@ export function mergeNavItems(
   baseItems: NavItem[],
   userItems: NavItem[],
 ): NavItem[] {
-  const existingPaths = collectNavPaths(baseItems);
-  const dedupedUserItems = filterDuplicateNavItems(userItems, existingPaths);
+  const userItemsByPath = new Map(
+    userItems.map((item) => [item.externalUrl ?? item.path, item]),
+  );
+  const mergedBaseItems = baseItems.map((baseItem) => {
+    const userItem = userItemsByPath.get(baseItem.externalUrl ?? baseItem.path);
+    if (!userItem) return baseItem;
 
-  return [...baseItems, ...dedupedUserItems];
+    return {
+      ...baseItem,
+      children: mergeNavItems(baseItem.children ?? [], userItem.children ?? []),
+    };
+  });
+  const basePaths = new Set(
+    baseItems.map((item) => item.externalUrl ?? item.path),
+  );
+
+  return [
+    ...mergedBaseItems,
+    ...userItems.filter(
+      (item) => !basePaths.has(item.externalUrl ?? item.path),
+    ),
+  ];
 }
 
 export function createUserMenuTitleMap(

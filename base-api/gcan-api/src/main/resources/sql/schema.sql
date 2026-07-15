@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS gcan_vehicle (
     vehicle_name VARCHAR(100) NOT NULL COMMENT '车辆名称',
     mine_id VARCHAR(100) NOT NULL COMMENT '煤矿ID',
     vehicle_type VARCHAR(50) NOT NULL COMMENT '车辆类型',
+    fault_profile_code VARCHAR(100) NULL COMMENT '故障码表编码',
     box_id_hex VARCHAR(2) NOT NULL COMMENT 'GCAN盒子ID HEX',
     box_id_dec INT NOT NULL COMMENT 'GCAN盒子ID DEC',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态 1启用 0停用',
@@ -15,9 +16,57 @@ CREATE TABLE IF NOT EXISTS gcan_vehicle (
     PRIMARY KEY (id),
     KEY idx_gcan_vehicle_mine (mine_id),
     KEY idx_gcan_vehicle_type (vehicle_type),
+    KEY idx_gcan_vehicle_fault_profile (fault_profile_code),
     KEY idx_gcan_vehicle_box_deleted (box_id_hex, deleted),
     KEY idx_gcan_vehicle_status (status)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='GCAN车辆档案';
+
+CREATE TABLE IF NOT EXISTS gcan_fault_profile (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    profile_code VARCHAR(100) NOT NULL COMMENT '故障码表编码',
+    profile_name VARCHAR(100) NOT NULL COMMENT '故障码表名称',
+    manufacturer VARCHAR(100) NULL COMMENT '厂家',
+    vehicle_type VARCHAR(50) NULL COMMENT '适用车型编码',
+    protocol_version VARCHAR(100) NULL COMMENT '协议版本',
+    applicable_vehicle_description VARCHAR(500) NULL COMMENT '适用车型说明',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态 1启用 0停用',
+    remark VARCHAR(500) NULL COMMENT '备注',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    create_by BIGINT NULL COMMENT '创建人',
+    update_by BIGINT NULL COMMENT '更新人',
+    deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0未删除 1已删除',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_gcan_fault_profile_code (profile_code),
+    KEY idx_gcan_fault_profile_status (status),
+    KEY idx_gcan_fault_profile_vehicle_type (vehicle_type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='GCAN故障码表';
+
+CREATE TABLE IF NOT EXISTS gcan_fault_definition (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',
+    profile_code VARCHAR(100) NOT NULL COMMENT '故障码表编码',
+    fault_code VARCHAR(100) NOT NULL COMMENT '原始故障码',
+    raw_level_code VARCHAR(50) NULL COMMENT '原始等级编码',
+    raw_level_name VARCHAR(100) NULL COMMENT '原始等级名称',
+    fault_name VARCHAR(200) NULL COMMENT '故障名称',
+    fault_definition VARCHAR(2000) NULL COMMENT '故障定义',
+    analysis VARCHAR(2000) NULL COMMENT '解析',
+    symptom VARCHAR(2000) NULL COMMENT '表现',
+    recovery VARCHAR(2000) NULL COMMENT '恢复',
+    removal VARCHAR(2000) NULL COMMENT '解除',
+    handling_suggestion VARCHAR(2000) NULL COMMENT '处理建议',
+    remark VARCHAR(500) NULL COMMENT '备注',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态 1启用 0停用',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    create_by BIGINT NULL COMMENT '创建人',
+    update_by BIGINT NULL COMMENT '更新人',
+    deleted TINYINT NOT NULL DEFAULT 0 COMMENT '逻辑删除 0未删除 1已删除',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_gcan_fault_definition_code (profile_code, fault_code),
+    KEY idx_gcan_fault_definition_profile (profile_code),
+    KEY idx_gcan_fault_definition_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='GCAN故障码定义';
 
 CREATE TABLE IF NOT EXISTS gcan_can_history (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键',

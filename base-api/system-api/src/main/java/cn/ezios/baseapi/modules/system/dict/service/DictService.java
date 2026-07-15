@@ -7,6 +7,7 @@ import cn.ezios.baseapi.modules.system.dict.dto.DictDataPageQuery;
 import cn.ezios.baseapi.modules.system.dict.dto.DictDataSaveRequest;
 import cn.ezios.baseapi.modules.system.dict.dto.DictTypePageQuery;
 import cn.ezios.baseapi.modules.system.dict.dto.DictTypeSaveRequest;
+import cn.ezios.baseapi.modules.system.dict.contract.GcanDictionaryVO;
 import cn.ezios.baseapi.modules.system.dict.vo.DictDataVO;
 import cn.ezios.baseapi.modules.system.dict.vo.DictItemVO;
 import cn.ezios.baseapi.modules.system.dict.vo.DictTypeVO;
@@ -41,4 +42,6 @@ public interface DictService {
     void deleteDataBatch(BatchIdsRequest request);
 
     List<DictItemVO> items(String dictCode);
+
+    List<GcanDictionaryVO> gcanItems();
 }
