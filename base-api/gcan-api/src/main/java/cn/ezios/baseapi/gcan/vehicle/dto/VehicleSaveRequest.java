@@ -15,6 +15,12 @@ public class VehicleSaveRequest {
     @Size(max = 100, message = "煤矿ID长度不能超过 100")
     private String mineId;
 
+    @Size(max = 20, message = "接入方式长度不能超过 20")
+    private String accessMode;
+
+    @Size(max = 100, message = "外部车辆编码长度不能超过 100")
+    private String externalVehicleCode;
+
     @NotBlank(message = "车辆类型不能为空")
     @Size(max = 50, message = "车辆类型长度不能超过 50")
     private String vehicleType;
@@ -22,7 +28,6 @@ public class VehicleSaveRequest {
     @Size(max = 100, message = "故障码表编码长度不能超过 100")
     private String faultProfileCode;
 
-    @NotBlank(message = "盒子ID(HEX)不能为空")
     private String boxIdHex;
 
     private Integer status;

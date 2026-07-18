@@ -94,6 +94,7 @@ VALUES
 (11, '19座人车B型', 'REN_19_B', 2, NULL),
 (11, '1.9T料车', 'LIAO_1_9T', 3, NULL),
 (11, '5T料车', 'LIAO_5T', 4, NULL),
+(11, '外部接口车辆', 'EXTERNAL', 5, '煤矿接口车辆默认类型，不参与 GCAN 协议解析'),
 (12, '在线', 'ONLINE', 1, NULL),
 (12, '离线', 'OFFLINE', 2, NULL),
 (12, '暂无数据', 'NO_DATA', 3, NULL),
@@ -102,4 +103,12 @@ VALUES
 
 INSERT INTO sys_config (id, config_name, config_key, config_value, config_type, value_type, status, is_builtin, remark)
 VALUES
-(1, '日志清空开关', 'system.log-clear-enabled', 'true', 'SYSTEM', 'BOOLEAN', 1, 1, '控制日志清空接口是否可用，dev 默认开启，prod 默认关闭');
+(1, '日志清空开关', 'system.log-clear-enabled', 'true', 'SYSTEM', 'BOOLEAN', 1, 1, '控制日志清空接口是否可用，dev 默认开启，prod 默认关闭'),
+(2, '外部车辆数据源开关', 'gcan.external.enabled', 'false', 'SYSTEM', 'BOOLEAN', 1, 0, '关闭时不请求外部煤矿车辆接口'),
+(3, '外部车辆数据源地址', 'gcan.external.base-url', '', 'SYSTEM', 'TEXT', 1, 0, '外部煤矿车辆接口服务根地址'),
+(4, '外部煤矿列表路径', 'gcan.external.mine-list-endpoint', '/api/v1/mine-config/list', 'SYSTEM', 'TEXT', 1, 0, '外部煤矿配置接口路径'),
+(5, '外部车辆数据路径', 'gcan.external.vehicle-data-endpoint', '/api/v1/vehicle-data/{mineCode}', 'SYSTEM', 'TEXT', 1, 0, '外部车辆数据接口路径'),
+(6, '外部车辆轮询间隔', 'gcan.external.poll-interval-ms', '300000', 'SYSTEM', 'NUMBER', 1, 0, '外部车辆数据轮询间隔，单位毫秒'),
+(7, '外部接口连接超时', 'gcan.external.connect-timeout-ms', '3000', 'SYSTEM', 'NUMBER', 1, 0, '外部接口连接超时，单位毫秒'),
+(8, '外部接口读取超时', 'gcan.external.read-timeout-ms', '10000', 'SYSTEM', 'NUMBER', 1, 0, '外部接口读取超时，单位毫秒'),
+(9, '外部数据新鲜度倍数', 'gcan.external.freshness-multiplier', '2', 'SYSTEM', 'NUMBER', 1, 0, '外部数据允许的轮询间隔倍数');

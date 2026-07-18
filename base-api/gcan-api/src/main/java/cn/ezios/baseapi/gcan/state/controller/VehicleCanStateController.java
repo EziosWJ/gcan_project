@@ -31,8 +31,7 @@ public class VehicleCanStateController {
 
     @GetMapping("/current")
     public ApiResponse<List<VehicleCanState>> current(VehicleCanStateQuery query) {
-        Map<String, GcanVehicle> vehiclesByBox = vehicleService.enabledByBoxIdHex(query);
-        Set<Long> vehicleIds = vehiclesByBox.values().stream()
+        Set<Long> vehicleIds = vehicleService.enabledVehicles(query).stream()
                 .map(GcanVehicle::getId)
                 .collect(Collectors.toSet());
         List<VehicleCanState> states = stateStore.currentStates().stream()

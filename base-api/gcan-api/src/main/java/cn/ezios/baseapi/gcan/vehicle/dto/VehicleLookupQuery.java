@@ -9,4 +9,6 @@ public class VehicleLookupQuery {
     private String mineId;
     private String vehicleType;
     private String boxIdHex;
+    private String externalVehicleCode;
+    private String accessMode;
 }

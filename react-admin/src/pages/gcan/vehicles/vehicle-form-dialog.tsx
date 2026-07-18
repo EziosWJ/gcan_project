@@ -59,7 +59,18 @@ export function VehicleFormDialog({
     form.reset(toVehicleFormValues(record ?? undefined));
   }, [form, open, record]);
 
+  const accessMode = form.watch("accessMode");
+  const isExternal = accessMode === "MINE_API";
   const boxIdDec = formatBoxIdDec(form.watch("boxIdHex") ?? "");
+  const resolvedMineOptions = record?.mineId && !mineOptions.some((item) => String(item.value) === record.mineId)
+    ? [...mineOptions, { value: record.mineId, label: record.mineId }]
+    : mineOptions;
+  const resolvedVehicleTypeOptions = [
+    ...vehicleTypeOptions,
+    ...(isExternal && !vehicleTypeOptions.some((item) => String(item.value).toUpperCase() === "EXTERNAL")
+      ? [{ value: "EXTERNAL", label: "外部接口车辆" }]
+      : []),
+  ];
 
   if (!open || typeof document === "undefined") return null;
 
@@ -128,13 +139,42 @@ export function VehicleFormDialog({
           >
             <Select id="gcan-mine-id" {...form.register("mineId")}>
               <option value="">请选择煤矿</option>
-              {mineOptions.map((item) => (
+              {resolvedMineOptions.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
                 </option>
               ))}
             </Select>
           </Field>
+
+          <Field
+            label="接入方式"
+            htmlFor="gcan-access-mode"
+            required
+            help="编辑已有车辆时不能切换主接入方式"
+          >
+            <Select id="gcan-access-mode" {...form.register("accessMode")} disabled={mode === "edit"}>
+              <option value="GCAN">GCAN</option>
+              <option value="MINE_API">煤矿接口</option>
+            </Select>
+          </Field>
+
+          {isExternal && (
+            <Field
+              label="外部车辆编码"
+              htmlFor="gcan-external-vehicle-code"
+              required
+              error={form.formState.errors.externalVehicleCode?.message}
+              help="外部身份由煤矿编码和该编码组成，编辑时不可修改"
+            >
+              <Input
+                id="gcan-external-vehicle-code"
+                {...form.register("externalVehicleCode")}
+                readOnly={mode === "edit"}
+                placeholder="例如 R101"
+              />
+            </Field>
+          )}
 
           <Field
             label="车辆类型"
@@ -144,7 +184,7 @@ export function VehicleFormDialog({
           >
             <Select id="gcan-vehicle-type" {...form.register("vehicleType")}>
               <option value="">请选择车辆类型</option>
-              {vehicleTypeOptions.map((item) => (
+              {resolvedVehicleTypeOptions.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
                 </option>
@@ -170,13 +210,14 @@ export function VehicleFormDialog({
           <Field
             label="盒子 ID(HEX)"
             htmlFor="gcan-box-id-hex"
-            required
+            required={!isExternal}
             error={form.formState.errors.boxIdHex?.message}
             help="支持 0x01 或 01，保存时会转成大写"
           >
             <Input
               id="gcan-box-id-hex"
               {...form.register("boxIdHex")}
+              disabled={isExternal}
               placeholder="例如 01"
             />
           </Field>

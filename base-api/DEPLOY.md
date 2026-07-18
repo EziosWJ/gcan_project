@@ -135,6 +135,9 @@ services:
       DB_USERNAME: ${DB_USERNAME:?DB_USERNAME is required}
       DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       GCAN_SYSTEM_API_URL: http://system-api:8080
+      # 可选：没有数据库配置记录时作为外部车辆数据源的启动默认值
+      GCAN_EXTERNAL_ENABLED: ${GCAN_EXTERNAL_ENABLED:-false}
+      GCAN_EXTERNAL_BASE_URL: ${GCAN_EXTERNAL_BASE_URL:-}
     volumes:
       - /opt/application/vehicleGcanProject/gcan-api.jar:/app/gcan-api.jar:ro
     ports:
@@ -184,7 +187,15 @@ docker network create 1panel-network
 DB_URL=jdbc:mysql://10.0.0.10:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
 DB_USERNAME=baseapi
 DB_PASSWORD=请替换为强密码
+# 线下测试可启用；线上也可以通过系统配置维护
+GCAN_EXTERNAL_ENABLED=false
+GCAN_EXTERNAL_BASE_URL=http://47.96.10.182:8088
+# 路径可按测试环境覆盖
+GCAN_EXTERNAL_MINE_LIST_ENDPOINT=/api/v1/mine-config/list
+GCAN_EXTERNAL_VEHICLE_DATA_ENDPOINT=/api/v1/vehicle-data/{mineCode}
 ```
+
+外部车辆接口默认关闭。系统配置表中的 `gcan.external.*` 配置会在运行时刷新并优先于环境变量；环境变量用于数据库配置尚未初始化或离线开发时的启动默认值。关闭开关后不会发起外部请求。
 
 ### 开发环境读取线上当前原始 CAN 帧
 
@@ -263,6 +274,7 @@ docker compose logs -f system-api gcan-api
 2. `system-api/src/main/resources/sql/data.sql`
 3. `system-api/src/main/resources/sql/migration/` 下按日期顺序执行迁移脚本
 4. `gcan-api/src/main/resources/sql/schema.sql`
+5. `gcan-api/src/main/resources/sql/migration/20260718_external_vehicle_identity.sql`
 
 已有数据库只执行尚未执行过的迁移脚本和 GCAN 表结构脚本，不要重复执行会产生重复数据的初始化脚本。
 

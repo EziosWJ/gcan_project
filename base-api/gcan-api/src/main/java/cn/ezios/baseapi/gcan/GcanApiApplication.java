@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @EnableScheduling
-@MapperScan("cn.ezios.baseapi.gcan.**.mapper")
+@MapperScan("cn.ezios.baseapi.gcan")
 @SpringBootApplication
 @EnableConfigurationProperties(GcanProperties.class)
 public class GcanApiApplication {

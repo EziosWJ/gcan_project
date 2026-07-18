@@ -4,6 +4,7 @@ import cn.ezios.baseapi.gcan.dictionary.GcanDictionaryCodes;
 import cn.ezios.baseapi.gcan.dictionary.GcanDictionaryNameService;
 import cn.ezios.baseapi.gcan.fault.service.FaultProfileService;
 import cn.ezios.baseapi.gcan.fault.vo.FaultResultVO;
+import cn.ezios.baseapi.gcan.external.ExternalMineNameStore;
 import cn.ezios.baseapi.gcan.open.monitor.vo.FaultVO;
 import cn.ezios.baseapi.gcan.open.monitor.vo.MonitorMineVO;
 import cn.ezios.baseapi.gcan.open.monitor.vo.MonitorOverviewVO;
@@ -12,6 +13,7 @@ import cn.ezios.baseapi.gcan.open.monitor.vo.PublicVehicleStateVO;
 import cn.ezios.baseapi.gcan.state.VehicleCanState;
 import cn.ezios.baseapi.gcan.state.VehicleCanStateStore;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
+import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.service.VehicleService;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -29,21 +31,24 @@ public class MonitorOverviewService {
     private final VehicleService vehicleService;
     private final GcanDictionaryNameService dictionaryNameService;
     private final FaultProfileService faultProfileService;
+    private final ExternalMineNameStore externalMineNameStore;
 
     public MonitorOverviewService(VehicleCanStateStore stateStore,
                                   VehicleService vehicleService,
                                   GcanDictionaryNameService dictionaryNameService,
-                                  FaultProfileService faultProfileService) {
+                                  FaultProfileService faultProfileService,
+                                  ExternalMineNameStore externalMineNameStore) {
         this.stateStore = stateStore;
         this.vehicleService = vehicleService;
         this.dictionaryNameService = dictionaryNameService;
         this.faultProfileService = faultProfileService;
+        this.externalMineNameStore = externalMineNameStore;
     }
 
     public MonitorOverviewVO overview() {
         LocalDateTime now = LocalDateTime.now();
         Map<String, List<PublicVehicleStateVO>> grouped = new LinkedHashMap<>();
-        for (GcanVehicle vehicle : vehicleService.enabledByBoxIdHex().values().stream()
+        for (GcanVehicle vehicle : vehicleService.enabledVehicles(new VehicleLookupQuery()).stream()
                 .sorted(Comparator.comparing(GcanVehicle::getMineId, Comparator.nullsFirst(Comparator.naturalOrder()))
                         .thenComparing(GcanVehicle::getVehicleName, Comparator.nullsFirst(Comparator.naturalOrder()))
                         .thenComparing(GcanVehicle::getId))
@@ -63,7 +68,7 @@ public class MonitorOverviewService {
         result.setMines(grouped.entrySet().stream().map(entry -> {
             MonitorMineVO mine = new MonitorMineVO();
             mine.setMineId(entry.getKey());
-            mine.setMineName(name(GcanDictionaryCodes.MINE, entry.getKey()));
+            mine.setMineName(mineName(entry.getKey()));
             mine.setVehicles(entry.getValue());
             mine.setStatistics(stats(entry.getValue()));
             return mine;
@@ -80,6 +85,8 @@ public class MonitorOverviewService {
             result.setVehicleId(vehicle.getId());
             result.setVehicleName(vehicle.getVehicleName());
             result.setMineId(vehicle.getMineId());
+            result.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
+            result.setExternalVehicleCode(vehicle.getExternalVehicleCode());
             result.setVehicleType(vehicle.getVehicleType());
             result.setVehicleTypeLabel(vehicle.getVehicleType());
             result.setBoxIdHex(vehicle.getBoxIdHex());
@@ -89,7 +96,7 @@ public class MonitorOverviewService {
             result.setParseSupported(true);
             result.setParseMessage("暂无数据");
         }
-        result.setMineName(name(GcanDictionaryCodes.MINE, vehicle.getMineId()));
+        result.setMineName(mineName(vehicle.getMineId()));
         result.setVehicleTypeLabel(name(GcanDictionaryCodes.VEHICLE_TYPE, vehicle.getVehicleType()));
         result.setConnectionStatusLabel(name(GcanDictionaryCodes.VEHICLE_CONNECTION_STATUS,
                 result.getConnectionStatus()));
@@ -150,5 +157,10 @@ public class MonitorOverviewService {
 
     private String name(String dictCode, String code) {
         return dictionaryNameService == null ? code : dictionaryNameService.name(dictCode, code);
+    }
+
+    private String mineName(String mineId) {
+        String externalName = externalMineNameStore.name(mineId);
+        return mineId.equals(externalName) ? name(GcanDictionaryCodes.MINE, mineId) : externalName;
     }
 }

@@ -97,6 +97,8 @@ public class GcanProcessingScheduler {
             state.setVehicleId(vehicle.getId());
             state.setVehicleName(vehicle.getVehicleName());
             state.setMineId(vehicle.getMineId());
+            state.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
+            state.setExternalVehicleCode(vehicle.getExternalVehicleCode());
             state.setVehicleType(vehicle.getVehicleType());
             state.setVehicleTypeLabel(vehicle.getVehicleType());
             state.setBoxIdHex(vehicle.getBoxIdHex());
@@ -115,6 +117,8 @@ public class GcanProcessingScheduler {
         state.setVehicleId(vehicle.getId());
         state.setVehicleName(vehicle.getVehicleName());
         state.setMineId(vehicle.getMineId());
+        state.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
+        state.setExternalVehicleCode(vehicle.getExternalVehicleCode());
         state.setVehicleType(vehicle.getVehicleType());
         state.setVehicleTypeLabel(vehicle.getVehicleType());
         state.setBoxIdHex(vehicle.getBoxIdHex());
@@ -134,6 +138,8 @@ public class GcanProcessingScheduler {
         state.setVehicleId(vehicle.getId());
         state.setVehicleName(vehicle.getVehicleName());
         state.setMineId(vehicle.getMineId());
+        state.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
+        state.setExternalVehicleCode(vehicle.getExternalVehicleCode());
         state.setVehicleType(vehicle.getVehicleType());
         state.setVehicleTypeLabel(vehicle.getVehicleType());
         state.setBoxIdHex(vehicle.getBoxIdHex());

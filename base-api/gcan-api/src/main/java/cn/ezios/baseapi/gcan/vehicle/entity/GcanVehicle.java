@@ -18,6 +18,8 @@ public class GcanVehicle {
 
     private String vehicleName;
     private String mineId;
+    private String accessMode;
+    private String externalVehicleCode;
     private String vehicleType;
     private String faultProfileCode;
     private String boxIdHex;

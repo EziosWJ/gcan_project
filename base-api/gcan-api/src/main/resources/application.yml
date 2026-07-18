@@ -31,6 +31,16 @@ gcan:
     read-timeout-ms: ${GCAN_MIRROR_READ_TIMEOUT_MS:2000}
     box-ids: ${GCAN_MIRROR_BOX_IDS:}
     can-ids: ${GCAN_MIRROR_CAN_IDS:}
+  external:
+    enabled: ${GCAN_EXTERNAL_ENABLED:false}
+    base-url: ${GCAN_EXTERNAL_BASE_URL:}
+    mine-list-endpoint: ${GCAN_EXTERNAL_MINE_LIST_ENDPOINT:/api/v1/mine-config/list}
+    vehicle-data-endpoint: ${GCAN_EXTERNAL_VEHICLE_DATA_ENDPOINT:/api/v1/vehicle-data/{mineCode}}
+    poll-interval-ms: ${GCAN_EXTERNAL_POLL_INTERVAL_MS:300000}
+    config-refresh-interval-ms: ${GCAN_EXTERNAL_CONFIG_REFRESH_INTERVAL_MS:10000}
+    connect-timeout-ms: ${GCAN_EXTERNAL_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${GCAN_EXTERNAL_READ_TIMEOUT_MS:10000}
+    freshness-multiplier: ${GCAN_EXTERNAL_FRESHNESS_MULTIPLIER:2}
   history:
     enabled: true
     store-interval-ms: 3000

@@ -150,7 +150,11 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
           </div>
           <div>
             <h3>{vehicle.vehicleName}</h3>
-            <p>{vehicle.vehicleTypeLabel ?? vehicle.vehicleType} <span>·</span> {vehicle.boxIdHex}</p>
+            <p>
+              {vehicle.vehicleTypeLabel ?? vehicle.vehicleType}
+              <span>·</span>
+              {vehicle.accessMode === "MINE_API" ? (vehicle.externalVehicleCode ?? "外部车辆") : (vehicle.boxIdHex ?? "-")}
+            </p>
           </div>
         </div>
         <span className={`monitor-status monitor-status--${connectionTone(connectionCode)}`}>

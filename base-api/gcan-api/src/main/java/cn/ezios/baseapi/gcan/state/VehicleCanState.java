@@ -10,6 +10,8 @@ public class VehicleCanState {
     private Long vehicleId;
     private String vehicleName;
     private String mineId;
+    private String accessMode;
+    private String externalVehicleCode;
     private String vehicleType;
     private String vehicleTypeLabel;
     private String boxIdHex;
@@ -19,6 +21,8 @@ public class VehicleCanState {
     private String parseMessage;
     private String connectionStatus = "NO_DATA";
     private String parseStatus = "SUPPORTED";
+    private Boolean sourceError;
+    private String sourceErrorMessage;
     private LocalDateTime lastReceivedAt;
     private LocalDateTime updateTime;
 

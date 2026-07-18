@@ -10,6 +10,7 @@ import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
 import cn.ezios.baseapi.gcan.vehicle.vo.VehicleVO;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface VehicleService {
 
@@ -17,11 +18,17 @@ public interface VehicleService {
 
     List<VehicleVO> listEnabled();
 
+    List<GcanVehicle> enabledVehicles(VehicleLookupQuery query);
+
     Map<String, GcanVehicle> enabledByBoxIdHex();
 
     Map<String, GcanVehicle> enabledByBoxIdHex(VehicleLookupQuery query);
 
     Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query);
+
+    Optional<GcanVehicle> findByExternalIdentity(String mineId, String externalVehicleCode);
+
+    GcanVehicle createExternal(String mineId, String externalVehicleCode);
 
     VehicleVO getDetail(Long id);
 

@@ -282,7 +282,7 @@ export function GcanVehiclesPage() {
     <div>
       <PageHeader
         title="车辆档案管理"
-        description="维护 GCAN 车辆基础档案，支持筛选、新增、编辑、状态切换和批量删除。"
+        description="维护 GCAN 与煤矿接口车辆档案，支持筛选、新增、编辑、状态切换和批量删除。"
       />
 
       <SearchFilterBar
@@ -337,6 +337,14 @@ export function GcanVehiclesPage() {
           value={filters.boxIdHex}
           onChange={(event) => setFilter("boxIdHex", event.target.value)}
         />
+        <Select
+          value={filters.accessMode}
+          onChange={(event) => setFilter("accessMode", event.target.value as VehicleFilterState["accessMode"])}
+        >
+          <option value="all">全部接入方式</option>
+          <option value="GCAN">GCAN</option>
+          <option value="MINE_API">煤矿接口</option>
+        </Select>
         <Select
           value={filters.status}
           onChange={(event) =>

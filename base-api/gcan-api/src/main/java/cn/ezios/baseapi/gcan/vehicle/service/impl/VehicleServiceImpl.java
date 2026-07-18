@@ -8,6 +8,7 @@ import cn.ezios.baseapi.common.model.StatusUpdateRequest;
 import cn.ezios.baseapi.gcan.common.BoxIdUtil;
 import cn.ezios.baseapi.gcan.fault.entity.GcanFaultProfile;
 import cn.ezios.baseapi.gcan.fault.service.FaultProfileService;
+import cn.ezios.baseapi.gcan.external.ExternalMineNameStore;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleSaveRequest;
@@ -21,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.BeanUtils;
@@ -35,10 +37,13 @@ public class VehicleServiceImpl implements VehicleService {
 
     private final GcanVehicleMapper vehicleMapper;
     private final FaultProfileService faultProfileService;
+    private final ExternalMineNameStore externalMineNameStore;
 
-    public VehicleServiceImpl(GcanVehicleMapper vehicleMapper, FaultProfileService faultProfileService) {
+    public VehicleServiceImpl(GcanVehicleMapper vehicleMapper, FaultProfileService faultProfileService,
+                              ExternalMineNameStore externalMineNameStore) {
         this.vehicleMapper = vehicleMapper;
         this.faultProfileService = faultProfileService;
+        this.externalMineNameStore = externalMineNameStore;
     }
 
     @Override
@@ -48,6 +53,7 @@ public class VehicleServiceImpl implements VehicleService {
                 new LambdaQueryWrapper<GcanVehicle>()
                         .like(StringUtils.hasText(query.getVehicleName()), GcanVehicle::getVehicleName, query.getVehicleName())
                         .eq(StringUtils.hasText(query.getMineId()), GcanVehicle::getMineId, query.getMineId())
+                        .eq(StringUtils.hasText(query.getAccessMode()), GcanVehicle::getAccessMode, normalizeAccessMode(query.getAccessMode()))
                         .eq(StringUtils.hasText(query.getVehicleType()), GcanVehicle::getVehicleType, normalizeVehicleType(query.getVehicleType()))
                         .eq(StringUtils.hasText(boxIdHex), GcanVehicle::getBoxIdHex, boxIdHex)
                         .eq(query.getStatus() != null, GcanVehicle::getStatus, query.getStatus())
@@ -62,18 +68,52 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     @Override
+    public List<GcanVehicle> enabledVehicles(VehicleLookupQuery query) {
+        return selectEnabled(query);
+    }
+
+    @Override
     public Map<String, GcanVehicle> enabledByBoxIdHex() {
         return enabledByBoxIdHex(new VehicleLookupQuery());
     }
 
     @Override
     public Map<String, GcanVehicle> enabledByBoxIdHex(VehicleLookupQuery query) {
-        return selectEnabled(query).stream().collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
+        return selectEnabled(query).stream()
+                .filter(this::isGcanVehicle)
+                .filter(vehicle -> StringUtils.hasText(vehicle.getBoxIdHex()))
+                .collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
     }
 
     @Override
     public Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query) {
-        return selectByLookup(query).stream().collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
+        return selectByLookup(query).stream()
+                .filter(this::isGcanVehicle)
+                .filter(vehicle -> StringUtils.hasText(vehicle.getBoxIdHex()))
+                .collect(Collectors.toMap(GcanVehicle::getBoxIdHex, Function.identity(), (a, b) -> a));
+    }
+
+    @Override
+    public Optional<GcanVehicle> findByExternalIdentity(String mineId, String externalVehicleCode) {
+        return Optional.ofNullable(vehicleMapper.selectOne(new LambdaQueryWrapper<GcanVehicle>()
+                .eq(GcanVehicle::getMineId, mineId)
+                .eq(GcanVehicle::getExternalVehicleCode, externalVehicleCode)
+                .eq(GcanVehicle::getAccessMode, "MINE_API")
+                .last("LIMIT 1")));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public GcanVehicle createExternal(String mineId, String externalVehicleCode) {
+        GcanVehicle vehicle = new GcanVehicle();
+        vehicle.setVehicleName(mineId + "-" + externalVehicleCode);
+        vehicle.setMineId(mineId);
+        vehicle.setAccessMode("MINE_API");
+        vehicle.setExternalVehicleCode(externalVehicleCode);
+        vehicle.setVehicleType("EXTERNAL");
+        vehicle.setStatus(STATUS_ENABLED);
+        vehicleMapper.insert(vehicle);
+        return vehicle;
     }
 
     @Override
@@ -84,17 +124,22 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void create(VehicleSaveRequest request) {
-        String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
+        String accessMode = normalizeAccessMode(request.getAccessMode());
+        String boxIdHex = normalizeBoxId(request.getBoxIdHex(), accessMode);
+        String externalVehicleCode = normalizeExternalVehicleCode(request.getExternalVehicleCode(), accessMode);
         ensureBoxUnique(boxIdHex, null);
+        ensureExternalIdentityUnique(request.getMineId().trim(), externalVehicleCode, null);
         String faultProfileCode = normalizeFaultProfileCode(request.getFaultProfileCode());
         validateFaultProfileCode(faultProfileCode, null);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
         vehicle.setMineId(request.getMineId().trim());
+        vehicle.setAccessMode(accessMode);
+        vehicle.setExternalVehicleCode(externalVehicleCode);
         vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
         vehicle.setFaultProfileCode(faultProfileCode);
         vehicle.setBoxIdHex(boxIdHex);
-        vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
+        vehicle.setBoxIdDec(boxIdHex == null ? null : BoxIdUtil.toDec(boxIdHex));
         vehicle.setStatus(request.getStatus() == null ? STATUS_ENABLED : request.getStatus());
         vehicleMapper.insert(vehicle);
     }
@@ -103,18 +148,23 @@ public class VehicleServiceImpl implements VehicleService {
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, VehicleSaveRequest request) {
         GcanVehicle existing = requireVehicle(id);
-        String boxIdHex = BoxIdUtil.normalizeHex(request.getBoxIdHex());
+        String accessMode = normalizeAccessMode(request.getAccessMode());
+        String boxIdHex = normalizeBoxId(request.getBoxIdHex(), accessMode);
+        String externalVehicleCode = normalizeExternalVehicleCode(request.getExternalVehicleCode(), accessMode);
         ensureBoxUnique(boxIdHex, id);
+        ensureExternalIdentityUnique(request.getMineId().trim(), externalVehicleCode, id);
         String faultProfileCode = normalizeFaultProfileCode(request.getFaultProfileCode());
         validateFaultProfileCode(faultProfileCode, existing);
         GcanVehicle vehicle = new GcanVehicle();
         BeanUtils.copyProperties(request, vehicle);
         vehicle.setId(id);
         vehicle.setMineId(request.getMineId().trim());
+        vehicle.setAccessMode(accessMode);
+        vehicle.setExternalVehicleCode(externalVehicleCode);
         vehicle.setVehicleType(normalizeVehicleType(request.getVehicleType()));
         vehicle.setFaultProfileCode(faultProfileCode);
         vehicle.setBoxIdHex(boxIdHex);
-        vehicle.setBoxIdDec(BoxIdUtil.toDec(boxIdHex));
+        vehicle.setBoxIdDec(boxIdHex == null ? null : BoxIdUtil.toDec(boxIdHex));
         vehicleMapper.updateById(vehicle);
     }
 
@@ -164,6 +214,8 @@ public class VehicleServiceImpl implements VehicleService {
                 .like(StringUtils.hasText(query.getVehicleName()), GcanVehicle::getVehicleName, query.getVehicleName())
                 .eq(StringUtils.hasText(query.getMineId()), GcanVehicle::getMineId, query.getMineId())
                 .eq(StringUtils.hasText(query.getVehicleType()), GcanVehicle::getVehicleType, normalizeVehicleType(query.getVehicleType()))
+                .eq(StringUtils.hasText(query.getExternalVehicleCode()), GcanVehicle::getExternalVehicleCode, query.getExternalVehicleCode())
+                .eq(StringUtils.hasText(query.getAccessMode()), GcanVehicle::getAccessMode, normalizeAccessMode(query.getAccessMode()))
                 .eq(StringUtils.hasText(boxIdHex), GcanVehicle::getBoxIdHex, boxIdHex)
                 .orderByDesc(GcanVehicle::getId);
     }
@@ -177,6 +229,9 @@ public class VehicleServiceImpl implements VehicleService {
     }
 
     private void ensureBoxUnique(String boxIdHex, Long excludeId) {
+        if (!StringUtils.hasText(boxIdHex)) {
+            return;
+        }
         Long count = vehicleMapper.selectCount(new LambdaQueryWrapper<GcanVehicle>()
                 .eq(GcanVehicle::getBoxIdHex, boxIdHex)
                 .ne(excludeId != null, GcanVehicle::getId, excludeId));
@@ -185,9 +240,26 @@ public class VehicleServiceImpl implements VehicleService {
         }
     }
 
+    private void ensureExternalIdentityUnique(String mineId, String externalVehicleCode, Long excludeId) {
+        if (!StringUtils.hasText(externalVehicleCode)) {
+            return;
+        }
+        Long count = vehicleMapper.selectCount(new LambdaQueryWrapper<GcanVehicle>()
+                .eq(GcanVehicle::getMineId, mineId)
+                .eq(GcanVehicle::getExternalVehicleCode, externalVehicleCode)
+                .eq(GcanVehicle::getAccessMode, "MINE_API")
+                .ne(excludeId != null, GcanVehicle::getId, excludeId));
+        if (count > 0) {
+            throw new BusinessException("外部车辆编码已绑定车辆");
+        }
+    }
+
     private VehicleVO toVO(GcanVehicle vehicle) {
         VehicleVO vo = new VehicleVO();
         BeanUtils.copyProperties(vehicle, vo);
+        if ("MINE_API".equalsIgnoreCase(vehicle.getAccessMode())) {
+            vo.setMineName(externalMineNameStore.name(vehicle.getMineId()));
+        }
         vo.setVehicleTypeLabel(vehicle.getVehicleType());
         return vo;
     }
@@ -209,5 +281,33 @@ public class VehicleServiceImpl implements VehicleService {
 
     private String normalizeFaultProfileCode(String profileCode) {
         return StringUtils.hasText(profileCode) ? profileCode.trim() : null;
+    }
+
+    private String normalizeAccessMode(String accessMode) {
+        return StringUtils.hasText(accessMode) ? accessMode.trim().toUpperCase(Locale.ROOT) : "GCAN";
+    }
+
+    private String normalizeBoxId(String boxIdHex, String accessMode) {
+        if ("MINE_API".equals(accessMode)) {
+            return null;
+        }
+        if (!StringUtils.hasText(boxIdHex)) {
+            throw new BusinessException("GCAN车辆必须绑定盒子ID(HEX)");
+        }
+        return BoxIdUtil.normalizeHex(boxIdHex);
+    }
+
+    private String normalizeExternalVehicleCode(String code, String accessMode) {
+        if (!"MINE_API".equals(accessMode)) {
+            return null;
+        }
+        if (!StringUtils.hasText(code)) {
+            throw new BusinessException("外部车辆必须填写外部车辆编码");
+        }
+        return code.trim();
+    }
+
+    private boolean isGcanVehicle(GcanVehicle vehicle) {
+        return vehicle.getAccessMode() == null || "GCAN".equalsIgnoreCase(vehicle.getAccessMode());
     }
 }

@@ -54,9 +54,9 @@ export function createVehicleColumns(
       title: "煤矿",
       dataIndex: "mineId",
       width: 150,
-      render: (value) => {
+      render: (value, record) => {
         const mineId = String(value ?? "");
-        const label = actions.mineLabelMap.get(mineId) ?? mineId;
+        const label = record.mineName ?? actions.mineLabelMap.get(mineId) ?? mineId;
         return (
           <span className="text-text-secondary">
             {label || "-"}
@@ -76,15 +76,27 @@ export function createVehicleColumns(
       ),
     },
     {
-      title: "盒子 ID",
+      title: "接入方式",
+      dataIndex: "accessMode",
+      width: 120,
+      render: (value, record) => (
+        <span className="text-text-secondary">
+          {record.accessMode === "MINE_API" ? "煤矿接口" : "GCAN"}
+        </span>
+      ),
+    },
+    {
+      title: "接入标识",
       dataIndex: "boxIdHex",
-      width: 110,
+      width: 150,
       render: (value, record) => (
         <span className="font-mono tabular-nums text-text-secondary">
-          {String(value ?? "-")}
-          <span className="ml-2 text-xs text-text-tertiary">
-            ({record.boxIdDec})
-          </span>
+          {record.accessMode === "MINE_API" ? (record.externalVehicleCode ?? "-") : (
+            <>
+              {String(value ?? "-")}
+              <span className="ml-2 text-xs text-text-tertiary">({record.boxIdDec ?? "-"})</span>
+            </>
+          )}
         </span>
       ),
     },

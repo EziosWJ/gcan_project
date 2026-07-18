@@ -6,6 +6,7 @@ export type VehicleFilterState = {
   mineId: string;
   vehicleType: string;
   boxIdHex: string;
+  accessMode: "all" | "GCAN" | "MINE_API";
   status: "all" | ApiStatus;
 };
 
@@ -16,6 +17,7 @@ export const DEFAULT_FILTERS: VehicleFilterState = {
   mineId: "",
   vehicleType: "",
   boxIdHex: "",
+  accessMode: "all",
   status: "all",
 };
 
@@ -28,16 +30,24 @@ export const vehicleFormSchema = z.object({
     .min(1, "车辆名称不能为空")
     .max(100, "车辆名称不能超过 100 个字符"),
   mineId: z.string().trim().min(1, "煤矿不能为空").max(100, "煤矿ID不能超过 100 个字符"),
+  accessMode: z.enum(["GCAN", "MINE_API"]),
+  externalVehicleCode: z.string().trim().max(100, "外部车辆编码不能超过 100 个字符").optional(),
   vehicleType: z.string().trim().min(1, "车辆类型不能为空"),
   faultProfileCode: z.string().trim().max(100, "故障码表编码不能超过 100 个字符").optional(),
   boxIdHex: z
     .string()
     .trim()
-    .min(1, "盒子 ID 不能为空")
     .max(4, "盒子 ID 不能超过 4 个字符")
-    .regex(HEX_BOX_ID_PATTERN, "盒子 ID 必须是 00-FF 十六进制"),
+    .refine((value) => !value || HEX_BOX_ID_PATTERN.test(value), "盒子 ID 必须是 00-FF 十六进制"),
   status: z.coerce.number().pipe(z.union([z.literal(0), z.literal(1)])),
   remark: z.string().trim().max(500, "备注不能超过 500 个字符").optional(),
+}).superRefine((values, context) => {
+  if (values.accessMode === "GCAN" && !values.boxIdHex) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["boxIdHex"], message: "GCAN车辆必须填写盒子 ID" });
+  }
+  if (values.accessMode === "MINE_API" && !values.externalVehicleCode) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["externalVehicleCode"], message: "外部车辆必须填写外部车辆编码" });
+  }
 });
 
 export type VehicleFormValues = z.infer<typeof vehicleFormSchema>;
@@ -54,6 +64,7 @@ export function buildVehicleQuery(
     mineId: filters.mineId.trim() || undefined,
     vehicleType: filters.vehicleType.trim() || undefined,
     boxIdHex: filters.boxIdHex.trim() || undefined,
+    accessMode: filters.accessMode === "all" ? undefined : filters.accessMode,
     status: filters.status === "all" ? undefined : filters.status,
   };
 }
@@ -62,6 +73,8 @@ export function toVehicleFormValues(vehicle?: GcanVehicleRecord): VehicleFormVal
   return {
     vehicleName: vehicle?.vehicleName ?? "",
     mineId: vehicle?.mineId ?? "",
+    accessMode: vehicle?.accessMode === "MINE_API" ? "MINE_API" : "GCAN",
+    externalVehicleCode: vehicle?.externalVehicleCode ?? "",
     vehicleType: vehicle?.vehicleType ?? "",
     faultProfileCode: vehicle?.faultProfileCode ?? "",
     boxIdHex: vehicle?.boxIdHex ?? "",
@@ -74,9 +87,11 @@ export function buildVehiclePayload(values: VehicleFormValues) {
   return {
     vehicleName: values.vehicleName.trim(),
     mineId: values.mineId.trim(),
+    accessMode: values.accessMode,
+    externalVehicleCode: values.externalVehicleCode?.trim() || undefined,
     vehicleType: values.vehicleType.trim().toUpperCase(),
     faultProfileCode: values.faultProfileCode?.trim() || undefined,
-    boxIdHex: values.boxIdHex.trim().toUpperCase(),
+    boxIdHex: values.boxIdHex.trim().toUpperCase() || undefined,
     status: values.status,
     remark: values.remark?.trim() || undefined,
   };

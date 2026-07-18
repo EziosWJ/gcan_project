@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class GcanProcessingSchedulerTest {
@@ -146,6 +147,21 @@ class GcanProcessingSchedulerTest {
         @Override
         public Map<String, GcanVehicle> byBoxIdHex(VehicleLookupQuery query) {
             return enabledByBoxIdHex();
+        }
+
+        @Override
+        public List<GcanVehicle> enabledVehicles(VehicleLookupQuery query) {
+            return vehicle == null ? List.of() : List.of(vehicle);
+        }
+
+        @Override
+        public Optional<GcanVehicle> findByExternalIdentity(String mineId, String externalVehicleCode) {
+            return Optional.empty();
+        }
+
+        @Override
+        public GcanVehicle createExternal(String mineId, String externalVehicleCode) {
+            throw new UnsupportedOperationException();
         }
 
         @Override

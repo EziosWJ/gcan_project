@@ -9,6 +9,9 @@ public class VehicleVO {
     private Long id;
     private String vehicleName;
     private String mineId;
+    private String mineName;
+    private String accessMode;
+    private String externalVehicleCode;
     private String vehicleType;
     private String vehicleTypeLabel;
     private String faultProfileCode;

@@ -29,6 +29,27 @@ class GcanPropertiesBindingTest {
         });
     }
 
+    @Test
+    void bindsExternalSourceRuntimeConfiguration() {
+        contextRunner.withPropertyValues(
+                        "gcan.external.enabled=true",
+                        "gcan.external.base-url=http://external.test",
+                        "gcan.external.mine-list-endpoint=/mines",
+                        "gcan.external.vehicle-data-endpoint=/vehicles/{mineCode}",
+                        "gcan.external.poll-interval-ms=15000",
+                        "gcan.external.freshness-multiplier=3")
+                .run(context -> {
+                    GcanProperties.External external = context.getBean(GcanProperties.class).getExternal();
+
+                    assertEquals(true, external.isEnabled());
+                    assertEquals("http://external.test", external.getBaseUrl());
+                    assertEquals("/mines", external.getMineListEndpoint());
+                    assertEquals("/vehicles/{mineCode}", external.getVehicleDataEndpoint());
+                    assertEquals(15000L, external.getPollIntervalMs());
+                    assertEquals(3, external.getFreshnessMultiplier());
+                });
+    }
+
     @Configuration(proxyBeanMethods = false)
     @EnableConfigurationProperties(GcanProperties.class)
     static class PropertiesConfiguration {

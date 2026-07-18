@@ -4,11 +4,14 @@ export type GcanVehicleRecord = {
   id: number;
   vehicleName: string;
   mineId: string;
+  mineName?: string | null;
+  accessMode?: "GCAN" | "MINE_API" | string;
+  externalVehicleCode?: string | null;
   vehicleType: string;
   vehicleTypeLabel?: string;
   faultProfileCode?: string | null;
-  boxIdHex: string;
-  boxIdDec: number;
+  boxIdHex?: string | null;
+  boxIdDec?: number | null;
   status: ApiStatus;
   remark?: string | null;
   createTime?: string | null;
@@ -20,15 +23,18 @@ export type GcanVehiclePageQuery = Partial<ApiPageRequest> & {
   mineId?: string;
   vehicleType?: string;
   boxIdHex?: string;
+  accessMode?: "GCAN" | "MINE_API" | string;
   status?: ApiStatus;
 };
 
 export type GcanVehicleSaveRequest = {
   vehicleName: string;
   mineId: string;
+  accessMode?: "GCAN" | "MINE_API" | string;
+  externalVehicleCode?: string;
   vehicleType: string;
   faultProfileCode?: string;
-  boxIdHex: string;
+  boxIdHex?: string;
   status?: ApiStatus;
   remark?: string;
 };
@@ -45,13 +51,17 @@ export type GcanVehicleCanStateRecord = {
   vehicleId: number;
   vehicleName: string;
   mineId?: string | null;
+  accessMode?: "GCAN" | "MINE_API" | string | null;
+  externalVehicleCode?: string | null;
   vehicleType: string;
   vehicleTypeLabel?: string;
-  boxIdHex: string;
-  boxIdDec: number;
+  boxIdHex?: string | null;
+  boxIdDec?: number | null;
   online: boolean;
   parseSupported?: boolean | null;
   parseMessage?: string | null;
+  sourceError?: boolean | null;
+  sourceErrorMessage?: string | null;
   lastReceivedAt?: string | null;
   updateTime?: string | null;
   highVoltage?: number | string | null;
@@ -106,6 +116,8 @@ export type GcanVehicleCanStateQuery = {
   mineId?: string;
   vehicleType?: string;
   boxIdHex?: string;
+  externalVehicleCode?: string;
+  accessMode?: "GCAN" | "MINE_API" | string;
   online?: boolean;
 };
 

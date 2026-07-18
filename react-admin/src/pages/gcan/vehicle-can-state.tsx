@@ -22,6 +22,8 @@ type StateFilterState = {
   mineId: string;
   vehicleType: string;
   boxIdHex: string;
+  externalVehicleCode: string;
+  accessMode: "all" | "GCAN" | "MINE_API";
   online: "all" | "online" | "offline";
 };
 
@@ -30,6 +32,8 @@ const DEFAULT_FILTERS: StateFilterState = {
   mineId: "",
   vehicleType: "",
   boxIdHex: "",
+  externalVehicleCode: "",
+  accessMode: "all",
   online: "all",
 };
 
@@ -39,6 +43,8 @@ function buildStateQuery(filters: StateFilterState): GcanVehicleCanStateQuery {
     mineId: filters.mineId.trim() || undefined,
     vehicleType: filters.vehicleType.trim() || undefined,
     boxIdHex: filters.boxIdHex.trim() || undefined,
+    externalVehicleCode: filters.externalVehicleCode.trim() || undefined,
+    accessMode: filters.accessMode === "all" ? undefined : filters.accessMode,
     online:
       filters.online === "all" ? undefined : filters.online === "online",
   };
@@ -93,15 +99,23 @@ function createStateColumns(
       ),
     },
     {
-      title: "盒子 ID",
-      dataIndex: "boxIdHex",
+      title: "接入方式",
+      dataIndex: "accessMode",
       width: 110,
+      render: (value) => <span className="text-text-secondary">{value === "MINE_API" ? "煤矿接口" : "GCAN"}</span>,
+    },
+    {
+      title: "接入标识",
+      dataIndex: "boxIdHex",
+      width: 140,
       render: (value, record) => (
         <span className="font-mono tabular-nums text-text-secondary">
-          {String(value ?? "-")}
-          <span className="ml-2 text-xs text-text-tertiary">
-            ({record.boxIdDec})
-          </span>
+          {record.accessMode === "MINE_API" ? (record.externalVehicleCode ?? "-") : (
+            <>
+              {String(value ?? "-")}
+              <span className="ml-2 text-xs text-text-tertiary">({record.boxIdDec ?? "-"})</span>
+            </>
+          )}
         </span>
       ),
     },
@@ -267,8 +281,8 @@ export function GcanVehicleCanStatePage() {
   return (
     <div>
       <PageHeader
-        title="车辆 CAN 状态"
-        description="查看并筛选当前车辆的实时 CAN 状态快照。"
+        title="车辆实时状态"
+        description="查看并筛选 GCAN 与煤矿接口车辆的统一实时状态快照。"
       />
 
       <SearchFilterBar
@@ -291,9 +305,22 @@ export function GcanVehicleCanStatePage() {
           onChange={(event) => setFilter("vehicleName", event.target.value)}
         />
         <Input
-          placeholder="盒子 ID(HEX)"
+          placeholder="盒子 ID / 外部车辆编码"
           value={filters.boxIdHex}
           onChange={(event) => setFilter("boxIdHex", event.target.value)}
+        />
+        <Select
+          value={filters.accessMode}
+          onChange={(event) => setFilter("accessMode", event.target.value as StateFilterState["accessMode"])}
+        >
+          <option value="all">全部接入方式</option>
+          <option value="GCAN">GCAN</option>
+          <option value="MINE_API">煤矿接口</option>
+        </Select>
+        <Input
+          placeholder="外部车辆编码"
+          value={filters.externalVehicleCode}
+          onChange={(event) => setFilter("externalVehicleCode", event.target.value)}
         />
         <Select
           value={filters.mineId}
@@ -353,8 +380,8 @@ export function GcanVehicleCanStatePage() {
           minWidth={1500}
           empty={
             <EmptyState
-              title="暂无 CAN 状态"
-              description="当前没有可展示的车辆 CAN 状态快照。"
+              title="暂无车辆状态"
+              description="当前没有可展示的车辆实时状态快照。"
               actionText="刷新"
               onAction={loadRecords}
             />

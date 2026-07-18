@@ -10,6 +10,7 @@ public class VehiclePageQuery extends PageQuery {
 
     private String vehicleName;
     private String mineId;
+    private String accessMode;
     private String vehicleType;
     private String boxIdHex;
     private Integer status;

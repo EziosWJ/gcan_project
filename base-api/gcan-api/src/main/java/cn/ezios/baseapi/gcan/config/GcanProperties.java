@@ -13,6 +13,7 @@ public class GcanProperties {
     private History history = new History();
     private Dictionary dictionary = new Dictionary();
     private Mirror mirror = new Mirror();
+    private External external = new External();
     private long frameStaleThresholdMs = 10000L;
 
     @Data
@@ -46,5 +47,18 @@ public class GcanProperties {
         private int readTimeoutMs = 2000;
         private List<String> boxIds = new ArrayList<>();
         private List<String> canIds = new ArrayList<>();
+    }
+
+    @Data
+    public static class External {
+        private boolean enabled;
+        private String baseUrl = "";
+        private String mineListEndpoint = "/api/v1/mine-config/list";
+        private String vehicleDataEndpoint = "/api/v1/vehicle-data/{mineCode}";
+        private long pollIntervalMs = 300000L;
+        private long configRefreshIntervalMs = 10000L;
+        private int connectTimeoutMs = 3000;
+        private int readTimeoutMs = 10000;
+        private int freshnessMultiplier = 2;
     }
 }
