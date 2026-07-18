@@ -22,6 +22,15 @@ gcan:
     refresh-interval-ms: 60000
     connect-timeout-ms: 2000
     read-timeout-ms: 3000
+  mirror:
+    enabled: ${GCAN_MIRROR_ENABLED:false}
+    base-url: ${GCAN_MIRROR_BASE_URL:}
+    endpoint: /api/open/gcan/v1/raw-frame/current
+    poll-interval-ms: ${GCAN_MIRROR_POLL_INTERVAL_MS:1000}
+    connect-timeout-ms: ${GCAN_MIRROR_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${GCAN_MIRROR_READ_TIMEOUT_MS:2000}
+    box-ids: ${GCAN_MIRROR_BOX_IDS:}
+    can-ids: ${GCAN_MIRROR_CAN_IDS:}
   history:
     enabled: true
     store-interval-ms: 3000

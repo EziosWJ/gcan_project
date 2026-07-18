@@ -32,6 +32,10 @@ public class NettyTcpServer {
 
     @PostConstruct
     public void start() throws InterruptedException {
+        if (properties.getMirror().isEnabled()) {
+            log.info("GCAN TCP server disabled because raw CAN mirror is enabled");
+            return;
+        }
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup(8);
 

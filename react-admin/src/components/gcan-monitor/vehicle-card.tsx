@@ -66,7 +66,7 @@ function getFaultPresentation(
   parseCode: string,
 ) {
   if (connectionCode === "NO_DATA" || parseCode === "UNSUPPORTED") {
-    return { label: "状态不可用", detail: connectionCode === "NO_DATA" ? "NO_DATA" : "UNSUPPORTED", tone: "warning" };
+    return { label: "状态不可用", detail: connectionCode === "NO_DATA" ? "暂无数据" : "未支持解析", tone: "warning" };
   }
 
   if (fault?.active) {
@@ -74,16 +74,16 @@ function getFaultPresentation(
       return { label: fault.name, detail: fault.code ?? "FAULT", tone: "fault" };
     }
     if (!fault.configured) {
-      return { label: "未配置故障码表", detail: fault.code ?? "FAULT", tone: "warning" };
+      return { label: "未配置故障码表", detail: fault.code ?? "故障", tone: "warning" };
     }
-    return { label: "未知故障码", detail: fault.code ?? "FAULT", tone: "warning" };
+    return { label: "未知故障码", detail: fault.code ?? "故障", tone: "warning" };
   }
 
   if (vehicle.faultState && vehicle.faultState !== "0") {
     return { label: "未知故障码", detail: vehicle.faultState, tone: "warning" };
   }
 
-  return { label: "无活动故障", detail: "NORMAL", tone: "normal" };
+  return { label: "无活动故障", detail: "正常", tone: "normal" };
 }
 
 function detailGroups(vehicle: GcanMonitorVehicle): { title: string; items: DetailItem[] }[] {
@@ -155,13 +155,13 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
         </div>
         <span className={`monitor-status monitor-status--${connectionTone(connectionCode)}`}>
           <i aria-hidden="true" />
-          <b>{connectionCode}</b> {connectionLabel(vehicle, connectionCode)}
+          {connectionLabel(vehicle, connectionCode)}
         </span>
       </div>
 
       <div className="monitor-vehicle-card__status-row">
         <span className={`monitor-parse-status monitor-parse-status--${parseCode === "SUPPORTED" ? "supported" : "unsupported"}`}>
-          <span>{parseCode}</span> {parseLabel(vehicle, parseCode)}
+          <span>{parseLabel(vehicle, parseCode)}</span>
         </span>
         <span className="monitor-vehicle-card__received">
           最近接收 {vehicle.lastReceivedAt ? vehicle.lastReceivedAt.replace("T", " ").slice(0, 19) : "—"}
@@ -180,7 +180,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
       </div>
 
       <div className="monitor-vehicle-card__quick-row">
-        <div><span>运行状态</span><strong>{hasData ? valueOrDash(vehicle.runState) : "NO_DATA"}</strong></div>
+        <div><span>运行状态</span><strong>{hasData ? valueOrDash(vehicle.runState) : "暂无数据"}</strong></div>
         <div><span>档位</span><strong>{hasData ? valueOrDash(vehicle.gear) : "—"}</strong></div>
         <div className={`monitor-fault monitor-fault--${faultPresentation.tone}`}>
           <AlertTriangle aria-hidden="true" /><span>{faultPresentation.label}</span><b>{faultPresentation.detail}</b>

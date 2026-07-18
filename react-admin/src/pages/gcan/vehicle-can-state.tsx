@@ -49,6 +49,14 @@ function formatMetric(value: number | string | boolean | null | undefined) {
   return String(value);
 }
 
+function formatDecimal(value: number | string | boolean | null | undefined) {
+  if (value === null || value === undefined || value === "") return "-";
+  if (typeof value === "boolean") return String(value);
+
+  const numericValue = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(numericValue) ? numericValue.toFixed(4) : String(value);
+}
+
 function createStateColumns(
   mineLabelMap: Map<string, string>,
   vehicleTypeLabelMap: Map<string, string>,
@@ -58,12 +66,14 @@ function createStateColumns(
       title: "车辆名称",
       dataIndex: "vehicleName",
       width: 150,
+      stickyLeft: 0,
       render: (value) => <span className="font-medium">{String(value ?? "-")}</span>,
     },
     {
       title: "煤矿",
       dataIndex: "mineId",
       width: 140,
+      stickyLeft: 150,
       render: (value) => {
         const mineId = String(value ?? "");
         const label = mineLabelMap.get(mineId) ?? mineId;
@@ -71,9 +81,10 @@ function createStateColumns(
       },
     },
     {
-      title: "车辆类型",
+      title: "车型",
       dataIndex: "vehicleTypeLabel",
       width: 140,
+      stickyLeft: 290,
       render: (value, record) => (
         <span className="text-text-secondary">
           {vehicleTypeLabelMap.get(record.vehicleType) ??
@@ -128,19 +139,25 @@ function createStateColumns(
       title: "车速",
       dataIndex: "speed",
       width: 90,
-      render: (value) => <span className="tabular-nums">{formatMetric(value)}</span>,
+      render: (value) => (
+        <span className="tabular-nums">{formatDecimal(value)}</span>
+      ),
     },
     {
       title: "电压",
       dataIndex: "batteryVoltage",
       width: 90,
-      render: (value) => <span className="tabular-nums">{formatMetric(value)}</span>,
+      render: (value) => (
+        <span className="tabular-nums">{formatDecimal(value)}</span>
+      ),
     },
     {
       title: "电量",
       dataIndex: "batteryPercentage",
       width: 90,
-      render: (value) => <span className="tabular-nums">{formatMetric(value)}</span>,
+      render: (value) => (
+        <span className="tabular-nums">{formatDecimal(value)}</span>
+      ),
     },
     {
       title: "运行状态",
@@ -332,6 +349,7 @@ export function GcanVehicleCanStatePage() {
           rowKey={(record) => record.vehicleId}
           loading={loading}
           error={error}
+          nowrap
           minWidth={1500}
           empty={
             <EmptyState

@@ -186,6 +186,27 @@ DB_USERNAME=baseapi
 DB_PASSWORD=请替换为强密码
 ```
 
+### 开发环境读取线上当前原始 CAN 帧
+
+开发环境可以通过 gcan-api 的配置镜像线上开放接口的当前原始 CAN 帧。该能力默认关闭，只应在开发环境启用；开启后会停用本地 GCAN TCP 监听，并要求配置至少一个目标盒子，避免误读取线上全部数据。
+
+例如线上 gcan-api 地址为 `http://47.96.10.182:8081` 时，在开发环境的运行环境中配置：
+
+```env
+GCAN_MIRROR_ENABLED=true
+GCAN_MIRROR_BASE_URL=http://47.96.10.182:8081
+GCAN_MIRROR_BOX_IDS=请替换为目标盒子HEX编号
+# 可选；为空表示目标盒子的全部当前CAN ID
+GCAN_MIRROR_CAN_IDS=
+GCAN_MIRROR_POLL_INTERVAL_MS=1000
+GCAN_MIRROR_CONNECT_TIMEOUT_MS=2000
+GCAN_MIRROR_READ_TIMEOUT_MS=2000
+```
+
+盒子编号支持项目既有的 HEX 写法，例如 `33`、`0x21`；多个盒子用逗号分隔。开发环境必须提前维护与线上目标盒子相同的盒子绑定、启用车辆和车型协议配置，镜像不会自动导入线上车辆档案。镜像使用线上原始帧的 `receivedAt`，线上接口短暂不可用时保留旧帧并让其自然过期。
+
+开发环境前端继续访问开发环境自己的监控页面和 API，例如 `http://localhost:6001/gcan/monitor`；不需要让浏览器直接请求线上开放接口。
+
 如果 MySQL 也是同一个 Compose 应用中的服务，连接地址中的主机名应改为 MySQL 服务名，例如：
 
 ```env

@@ -1,8 +1,10 @@
 package cn.ezios.baseapi.gcan.raw;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
@@ -13,6 +15,17 @@ public class RawCanFrameSnapshotStore {
 
     public void put(RawCanFrame frame) {
         frames.put(key(frame.getBoxIdHex(), frame.getCanId()), frame);
+    }
+
+    public synchronized void replaceFrames(String boxIdHex,
+                                            Set<String> canIds,
+                                            Collection<RawCanFrame> replacement) {
+        frames.entrySet().removeIf(entry -> {
+            RawCanFrame frame = entry.getValue();
+            return frame.getBoxIdHex().equals(boxIdHex)
+                    && (canIds.isEmpty() || canIds.contains(frame.getCanId()));
+        });
+        replacement.forEach(this::put);
     }
 
     public List<RawCanFrame> currentFrames() {

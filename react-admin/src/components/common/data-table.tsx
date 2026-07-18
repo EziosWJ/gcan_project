@@ -11,6 +11,7 @@ type DataTableProps<T> = {
   error?: ReactNode;
   empty?: ReactNode;
   minWidth?: number;
+  nowrap?: boolean;
   className?: string;
   onRowClick?: (record: T) => void;
   rowClassName?: (record: T, index: number) => string | undefined;
@@ -39,6 +40,7 @@ export function DataTable<T>({
   error,
   empty,
   minWidth = 840,
+  nowrap = false,
   className,
   onRowClick,
   rowClassName,
@@ -94,10 +96,17 @@ export function DataTable<T>({
                 key={getColumnKey(column, index)}
                 className={cn(
                   "border-b border-border px-5 py-3 font-medium",
+                  column.stickyLeft !== undefined && "sticky z-20 bg-slate-50",
+                  nowrap && "whitespace-nowrap",
                   column.align === "center" && "text-center",
                   column.align === "right" && "text-right",
                 )}
-                style={{ width: column.width }}
+                style={{
+                  width: column.width,
+                  ...(column.stickyLeft !== undefined
+                    ? { left: column.stickyLeft }
+                    : {}),
+                }}
                 scope="col"
               >
                 {column.title}
@@ -135,9 +144,16 @@ export function DataTable<T>({
                     key={getColumnKey(column, columnIndex)}
                     className={cn(
                       "border-b border-border px-5 py-3 align-middle",
+                      column.stickyLeft !== undefined && "sticky z-10 bg-surface",
+                      nowrap && "whitespace-nowrap",
                       column.align === "center" && "text-center",
                       column.align === "right" && "text-right",
                     )}
+                    style={
+                      column.stickyLeft !== undefined
+                        ? { left: column.stickyLeft }
+                        : undefined
+                    }
                   >
                     {column.render
                       ? column.render(value, record, rowIndex)
