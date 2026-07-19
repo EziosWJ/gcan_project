@@ -7,6 +7,7 @@ import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.vo.RawCanFrameVO;
 import java.time.Duration;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ public class HttpGcanRawFrameSource implements GcanRawFrameSource {
     private final RestClient restClient;
     private final GcanProperties.Mirror properties;
 
+    @Autowired
     public HttpGcanRawFrameSource(GcanProperties properties) {
         this(properties.getMirror(), createRestClient(properties.getMirror()));
     }

@@ -6,6 +6,7 @@ import cn.ezios.baseapi.gcan.config.ExternalSourceConfigStore;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -26,6 +27,7 @@ public class ExternalVehicleSource {
     private final ExternalSourceConfigStore configStore;
     private final Function<ExternalSourceConfig, RestClient> clientFactory;
 
+    @Autowired
     public ExternalVehicleSource(ExternalSourceConfigStore configStore) {
         this(configStore, ExternalVehicleSource::defaultClient);
     }
