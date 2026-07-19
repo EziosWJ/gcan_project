@@ -71,6 +71,7 @@ public class GcanProcessingScheduler {
                     .findFirst()
                     .ifPresentOrElse(handler -> {
                         VehicleCanState state = handler.handle(frames, vehicle);
+                        copyVehicleMetadata(state, vehicle);
                         state.setOnline(true);
                         state.setConnectionStatus("ONLINE");
                         state.setParseStatus("SUPPORTED");
@@ -94,16 +95,8 @@ public class GcanProcessingScheduler {
         VehicleCanState state = vehicleCanStateStore.get(vehicle.getId());
         if (state == null) {
             state = new VehicleCanState();
-            state.setVehicleId(vehicle.getId());
-            state.setVehicleName(vehicle.getVehicleName());
-            state.setMineId(vehicle.getMineId());
-            state.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
-            state.setExternalVehicleCode(vehicle.getExternalVehicleCode());
-            state.setVehicleType(vehicle.getVehicleType());
-            state.setVehicleTypeLabel(vehicle.getVehicleType());
-            state.setBoxIdHex(vehicle.getBoxIdHex());
-            state.setBoxIdDec(vehicle.getBoxIdDec());
         }
+        copyVehicleMetadata(state, vehicle);
         state.setOnline(false);
         state.setConnectionStatus("OFFLINE");
         state.setLastReceivedAt(newest);
@@ -114,15 +107,7 @@ public class GcanProcessingScheduler {
     private void markUnsupported(GcanVehicle vehicle, LocalDateTime newest) {
         log.warn("未找到车辆类型 {} 的协议解析器", vehicle.getVehicleType());
         VehicleCanState state = new VehicleCanState();
-        state.setVehicleId(vehicle.getId());
-        state.setVehicleName(vehicle.getVehicleName());
-        state.setMineId(vehicle.getMineId());
-        state.setAccessMode(vehicle.getAccessMode() == null ? "GCAN" : vehicle.getAccessMode());
-        state.setExternalVehicleCode(vehicle.getExternalVehicleCode());
-        state.setVehicleType(vehicle.getVehicleType());
-        state.setVehicleTypeLabel(vehicle.getVehicleType());
-        state.setBoxIdHex(vehicle.getBoxIdHex());
-        state.setBoxIdDec(vehicle.getBoxIdDec());
+        copyVehicleMetadata(state, vehicle);
         state.setOnline(true);
         state.setParseSupported(false);
         state.setConnectionStatus("ONLINE");
@@ -135,6 +120,18 @@ public class GcanProcessingScheduler {
 
     private void markNoData(GcanVehicle vehicle) {
         VehicleCanState state = new VehicleCanState();
+        copyVehicleMetadata(state, vehicle);
+        state.setOnline(false);
+        state.setConnectionStatus("NO_DATA");
+        boolean supported = handlers.stream().anyMatch(handler -> handler.canHandle(vehicle.getVehicleType()));
+        state.setParseStatus(supported ? "SUPPORTED" : "UNSUPPORTED");
+        state.setParseSupported(supported);
+        state.setParseMessage(supported ? "暂无数据" : "未支持解析");
+        state.setUpdateTime(LocalDateTime.now());
+        vehicleCanStateStore.put(state);
+    }
+
+    private void copyVehicleMetadata(VehicleCanState state, GcanVehicle vehicle) {
         state.setVehicleId(vehicle.getId());
         state.setVehicleName(vehicle.getVehicleName());
         state.setMineId(vehicle.getMineId());
@@ -144,14 +141,6 @@ public class GcanProcessingScheduler {
         state.setVehicleTypeLabel(vehicle.getVehicleType());
         state.setBoxIdHex(vehicle.getBoxIdHex());
         state.setBoxIdDec(vehicle.getBoxIdDec());
-        state.setOnline(false);
-        state.setConnectionStatus("NO_DATA");
-        boolean supported = handlers.stream().anyMatch(handler -> handler.canHandle(vehicle.getVehicleType()));
-        state.setParseStatus(supported ? "SUPPORTED" : "UNSUPPORTED");
-        state.setParseSupported(supported);
-        state.setParseMessage(supported ? "暂无数据" : "未支持解析");
-        state.setUpdateTime(LocalDateTime.now());
-        vehicleCanStateStore.put(state);
     }
 
     private boolean isFresh(LocalDateTime time) {
