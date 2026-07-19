@@ -4,46 +4,70 @@ spring:
   profiles:
     active: dev
   datasource:
+    # 数据库连接信息；部署环境建议通过 DB_URL、DB_USERNAME、DB_PASSWORD 注入。
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://localhost:3306/base_project?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
 server:
+  # gcan-api 的 HTTP 管理接口端口；GCAN 设备 TCP 接收端口见 gcan.tcp.port。
   port: 8081
 
 gcan:
   tcp:
+    # 接收 GCAN 盒子数据的 TCP 端口。
     port: 8000
+  # 原始 CAN 帧超过该时间没有更新时，GCAN 车辆状态标记为离线，单位：毫秒。
   frame-stale-threshold-ms: 10000
   dictionary:
+    # GCAN 字典来源为 system-api，用于车型、煤矿、状态等编码的名称转换。
     base-url: ${GCAN_SYSTEM_API_URL:http://localhost:8080}
     endpoint: /api/open/gcan/v1/dictionaries
+    # 字典缓存刷新周期和 HTTP 超时时间，单位：毫秒。
     refresh-interval-ms: 60000
     connect-timeout-ms: 2000
     read-timeout-ms: 3000
   mirror:
-    enabled: ${GCAN_MIRROR_ENABLED:false}
-    base-url: ${GCAN_MIRROR_BASE_URL:}
+    # GCAN 原始帧镜像：从另一套 gcan-api 拉取当前 CAN 帧供开发调试。
+    # 默认关闭；开启后按 box-ids 拉取，不会自动导入对方车辆档案。
+    enabled: ${GCAN_MIRROR_ENABLED:true}
+    base-url: ${GCAN_MIRROR_BASE_URL:http://47.96.10.182:8081}
     endpoint: /api/open/gcan/v1/raw-frame/current
+    # 镜像轮询周期和 HTTP 超时时间，单位：毫秒。
     poll-interval-ms: ${GCAN_MIRROR_POLL_INTERVAL_MS:1000}
     connect-timeout-ms: ${GCAN_MIRROR_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${GCAN_MIRROR_READ_TIMEOUT_MS:2000}
-    box-ids: ${GCAN_MIRROR_BOX_IDS:}
+    # 目标盒子编号，支持 01、0x01 等 HEX 写法，多个值用逗号分隔。
+    box-ids: ${GCAN_MIRROR_BOX_IDS:33,3B}
+    # 可选的 CAN ID 过滤列表，多个值用逗号分隔；为空表示不按 CAN ID 过滤。
     can-ids: ${GCAN_MIRROR_CAN_IDS:}
   external:
-    enabled: ${GCAN_EXTERNAL_ENABLED:false}
-    base-url: ${GCAN_EXTERNAL_BASE_URL:}
+    # 煤矿接口车辆数据源。车辆通过 mineCode + vehicleCode 识别，不使用 boxId。
+    # 默认关闭；关闭时不会请求外部接口，适合离线开发。
+    # 数据库 sys_config 中的 gcan.external.* 配置运行时刷新后优先于这里的环境变量默认值。
+    enabled: ${GCAN_EXTERNAL_ENABLED:true}
+    # 外部接口服务根地址，例如 http://47.96.10.182:8088；不要在这里重复写接口路径。
+    base-url: ${GCAN_EXTERNAL_BASE_URL:http://47.96.10.182:8088}
+    # 煤矿列表接口路径；返回 mineCode、mineName、pullFrequency 等煤矿配置。
     mine-list-endpoint: ${GCAN_EXTERNAL_MINE_LIST_ENDPOINT:/api/v1/mine-config/list}
+    # 车辆数据接口路径，{mineCode} 会替换为煤矿编码，例如 HX。
     vehicle-data-endpoint: ${GCAN_EXTERNAL_VEHICLE_DATA_ENDPOINT:/api/v1/vehicle-data/{mineCode}}
+    # 外部车辆数据轮询周期，单位：毫秒；也可按接口返回的 pullFrequency 判定新鲜度。
     poll-interval-ms: ${GCAN_EXTERNAL_POLL_INTERVAL_MS:300000}
+    # 系统配置刷新周期，修改 gcan.external.* 后最多等待该时间生效，单位：毫秒。
     config-refresh-interval-ms: ${GCAN_EXTERNAL_CONFIG_REFRESH_INTERVAL_MS:10000}
+    # 外部接口连接建立和读取响应的超时时间，单位：毫秒。
     connect-timeout-ms: ${GCAN_EXTERNAL_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${GCAN_EXTERNAL_READ_TIMEOUT_MS:10000}
+    # 数据新鲜度阈值倍数：超过 pullFrequency × 此倍数仍未收到新 dataTime 时标记离线。
     freshness-multiplier: ${GCAN_EXTERNAL_FRESHNESS_MULTIPLIER:2}
   history:
+    # GCAN 原始帧历史存储；仅针对 GCAN 盒子数据，煤矿接口车辆不写入 CAN 历史。
     enabled: true
+    # 原始帧批量落库周期，单位：毫秒。
     store-interval-ms: 3000
+    # 需要保存历史的 CAN ID 列表。
     included-can-ids:
       - 08F200A0
       - 1811A6A0
