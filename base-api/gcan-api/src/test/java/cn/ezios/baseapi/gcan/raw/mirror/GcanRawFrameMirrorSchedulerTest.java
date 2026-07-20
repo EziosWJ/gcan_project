@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import cn.ezios.baseapi.gcan.config.GcanProperties;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.RawCanFrameSnapshotStore;
+import cn.ezios.baseapi.gcan.raw.RawCanFrameSource;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -44,6 +45,7 @@ class GcanRawFrameMirrorSchedulerTest {
 
         assertEquals(List.of("A001"), store.currentFrames().stream().map(RawCanFrame::getCanId).toList());
         assertEquals(receivedAt, store.currentFrames().getFirst().getReceivedAt());
+        assertEquals(RawCanFrameSource.MIRROR, store.currentFrames().getFirst().getSource());
     }
 
     @Test
@@ -95,7 +97,7 @@ class GcanRawFrameMirrorSchedulerTest {
 
     private RawCanFrame frame(String boxIdHex, String canId, LocalDateTime receivedAt) {
         return new RawCanFrame(boxIdHex, Integer.parseInt(boxIdHex, 16), canId,
-                new int[]{1, 2, 3, 4, 5, 6, 7, 8}, receivedAt);
+                new int[]{1, 2, 3, 4, 5, 6, 7, 8}, receivedAt, RawCanFrameSource.MIRROR);
     }
 
     private static class FakeSource implements GcanRawFrameSource {

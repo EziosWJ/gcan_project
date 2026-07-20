@@ -14,6 +14,7 @@ public class GcanProperties {
     private Dictionary dictionary = new Dictionary();
     private Mirror mirror = new Mirror();
     private External external = new External();
+    /** 原始 CAN 帧新鲜度阈值，单位毫秒。 */
     private long frameStaleThresholdMs = 10000L;
 
     @Data
@@ -45,6 +46,7 @@ public class GcanProperties {
         private long pollIntervalMs = 1000L;
         private int connectTimeoutMs = 2000;
         private int readTimeoutMs = 2000;
+        private boolean ignoreStaleFrames;
         private List<String> boxIds = new ArrayList<>();
         private List<String> canIds = new ArrayList<>();
     }

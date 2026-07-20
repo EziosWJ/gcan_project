@@ -2,6 +2,7 @@ package cn.ezios.baseapi.gcan.processing;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -13,6 +14,8 @@ import cn.ezios.baseapi.gcan.datagram.Material19TDatagramHandler;
 import cn.ezios.baseapi.gcan.history.service.CanHistoryService;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.RawCanFrameSnapshotStore;
+import cn.ezios.baseapi.gcan.raw.RawCanFrameSource;
+import cn.ezios.baseapi.gcan.state.VehicleCanState;
 import cn.ezios.baseapi.gcan.state.VehicleCanStateStore;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehiclePageQuery;
 import cn.ezios.baseapi.gcan.vehicle.dto.VehicleLookupQuery;
@@ -46,6 +49,23 @@ class GcanProcessingSchedulerTest {
     }
 
     @Test
+    void refreshVehicleCanStatesKeepsExternalStateWhenCleaningGcanStates() {
+        RawCanFrameSnapshotStore rawStore = new RawCanFrameSnapshotStore();
+        VehicleCanStateStore stateStore = new VehicleCanStateStore();
+        MutableVehicleService vehicleService = new MutableVehicleService(vehicle());
+        GcanProcessingScheduler scheduler = scheduler(rawStore, stateStore, vehicleService);
+        VehicleCanState externalState = new VehicleCanState();
+        externalState.setVehicleId(99L);
+        externalState.setAccessMode("MINE_API");
+        externalState.setConnectionStatus("ONLINE");
+        stateStore.put(externalState);
+
+        scheduler.refreshVehicleCanStates();
+
+        assertNotNull(stateStore.get(99L));
+    }
+
+    @Test
     void refreshVehicleCanStatesMarksExistingStateOfflineWhenFramesAreStale() {
         RawCanFrameSnapshotStore rawStore = new RawCanFrameSnapshotStore();
         VehicleCanStateStore stateStore = new VehicleCanStateStore();
@@ -59,6 +79,30 @@ class GcanProcessingSchedulerTest {
         scheduler.refreshVehicleCanStates();
 
         assertFalse(stateStore.get(1L).getOnline());
+    }
+
+    @Test
+    void refreshVehicleCanStatesAllowsStaleMirrorFramesOnlyWhenMirrorDebugModeIsEnabled() {
+        RawCanFrameSnapshotStore rawStore = new RawCanFrameSnapshotStore();
+        VehicleCanStateStore stateStore = new VehicleCanStateStore();
+        MutableVehicleService vehicleService = new MutableVehicleService(vehicle());
+        GcanProperties properties = new GcanProperties();
+        properties.setFrameStaleThresholdMs(10000);
+        properties.getMirror().setIgnoreStaleFrames(true);
+        GcanProcessingScheduler scheduler = new GcanProcessingScheduler(
+                rawStore,
+                stateStore,
+                vehicleService,
+                new NoopHistoryService(),
+                List.of(new Material19TDatagramHandler()),
+                properties);
+
+        rawStore.put(frame(LocalDateTime.now().minusSeconds(20), RawCanFrameSource.MIRROR));
+        scheduler.refreshVehicleCanStates();
+
+        assertTrue(stateStore.get(1L).getOnline());
+        assertEquals("SUPPORTED", stateStore.get(1L).getParseStatus());
+        assertEquals(10, stateStore.get(1L).getSpeed().intValue());
     }
 
     @Test
@@ -118,7 +162,11 @@ class GcanProcessingSchedulerTest {
     }
 
     private RawCanFrame frame(LocalDateTime receivedAt) {
-        return new RawCanFrame("01", 1, "08F200A0", new int[]{0, 0, 0, 0, 0, 60, 0, 0}, receivedAt);
+        return frame(receivedAt, RawCanFrameSource.TCP);
+    }
+
+    private RawCanFrame frame(LocalDateTime receivedAt, RawCanFrameSource source) {
+        return new RawCanFrame("01", 1, "08F200A0", new int[]{0, 0, 0, 0, 0, 60, 0, 0}, receivedAt, source);
     }
 
     private static class NoopHistoryService implements CanHistoryService {

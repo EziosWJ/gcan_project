@@ -90,6 +90,19 @@
 - **脚手架结构参考**: 只看单个子模块，不要批量扫目录。
 - **架构参考**: 只在 `docs/` 或 `experience/` 下找摘要。
 
+## 临时调试决策（2026-07-19）
+
+- 之前曾尝试注释全局 `gcan.frame-stale-threshold-ms: 10000`，以解析线上镜像中的历史帧；该方案会同时改变正常 GCAN TCP 接入和 CAN 历史写入的行为，已废弃。
+- 当前恢复全局 10 秒新鲜度阈值，作为正常 GCAN TCP 接入和 CAN 历史数据的统一规则。
+- mirror 拉取的原始帧标记为 `MIRROR` 来源；通过 `gcan.mirror.ignore-stale-frames`（当前联调默认开启）仅让镜像帧进入车辆状态协议解析时跳过新鲜度判断。镜像帧仍保留远端原始 `receivedAt`，CAN 历史写入继续使用全局新鲜度阈值。
+- mirror 配置关闭时，正常 GCAN TCP 解析流程不受该调试开关影响；联调结束后应关闭 `ignore-stale-frames`，避免历史镜像帧被展示为当前状态。
+
+## 外部车辆状态生命周期（2026-07-20）
+
+- external 车辆通过煤矿接口同步到 `gcan_vehicle`，并由 `ExternalVehicleSyncService` 写入统一 `VehicleCanStateStore`；车辆档案存在但状态快照不存在时，监控页面会显示“暂无数据”。
+- `GcanProcessingScheduler` 只负责 GCAN 盒子数据的解析和清理。它清理过期或已停用状态时，只允许删除 `GCAN` 状态，不能删除 `MINE_API` external 状态；否则 external 同步刚写入的实时状态会被每秒 GCAN 任务误删。
+- external 车辆没有 `boxId`，不能通过 `enabledByBoxIdHex()` 判断是否仍然有效；external 状态的在线、离线和数据源异常由 `ExternalVehicleSyncService` 负责。
+
 ## 何时本文件需要更新
 
 以下信号之一出现时，应触发本文件（和/或 `docs/adr/`）的更新，通常由 `/grill-with-docs` 完成：

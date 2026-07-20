@@ -4,6 +4,7 @@ import cn.ezios.baseapi.common.model.ApiResponse;
 import cn.ezios.baseapi.gcan.common.BoxIdUtil;
 import cn.ezios.baseapi.gcan.config.GcanProperties;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
+import cn.ezios.baseapi.gcan.raw.RawCanFrameSource;
 import cn.ezios.baseapi.gcan.raw.vo.RawCanFrameVO;
 import java.time.Duration;
 import java.util.List;
@@ -85,7 +86,8 @@ public class HttpGcanRawFrameSource implements GcanRawFrameSource {
                 BoxIdUtil.toDec(boxIdHex),
                 frame.getCanId().trim().toUpperCase(),
                 values,
-                frame.getReceivedAt());
+                frame.getReceivedAt(),
+                RawCanFrameSource.MIRROR);
     }
 
     private int parseByte(String value) {

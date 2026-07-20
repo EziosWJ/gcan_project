@@ -5,6 +5,7 @@ import cn.ezios.baseapi.gcan.datagram.VehicleCanDatagramHandler;
 import cn.ezios.baseapi.gcan.history.service.CanHistoryService;
 import cn.ezios.baseapi.gcan.raw.RawCanFrame;
 import cn.ezios.baseapi.gcan.raw.RawCanFrameSnapshotStore;
+import cn.ezios.baseapi.gcan.raw.RawCanFrameSource;
 import cn.ezios.baseapi.gcan.state.VehicleCanState;
 import cn.ezios.baseapi.gcan.state.VehicleCanStateStore;
 import cn.ezios.baseapi.gcan.vehicle.entity.GcanVehicle;
@@ -52,6 +53,7 @@ public class GcanProcessingScheduler {
                 .map(GcanVehicle::getId)
                 .collect(Collectors.toSet());
         vehicleCanStateStore.currentStates().stream()
+                .filter(this::isGcanState)
                 .map(VehicleCanState::getVehicleId)
                 .filter(vehicleId -> !enabledVehicleIds.contains(vehicleId))
                 .forEach(vehicleCanStateStore::remove);
@@ -61,9 +63,9 @@ public class GcanProcessingScheduler {
                 markNoData(vehicle);
                 continue;
             }
-            LocalDateTime newest = newestReceivedAt(frames);
-            if (!isFresh(newest)) {
-                markOffline(vehicle, newest);
+            RawCanFrame newest = newestFrame(frames);
+            if (!isFreshForState(newest)) {
+                markOffline(vehicle, newest.getReceivedAt());
                 continue;
             }
             handlers.stream()
@@ -75,9 +77,9 @@ public class GcanProcessingScheduler {
                         state.setOnline(true);
                         state.setConnectionStatus("ONLINE");
                         state.setParseStatus("SUPPORTED");
-                        state.setLastReceivedAt(newest);
+                        state.setLastReceivedAt(newest.getReceivedAt());
                         vehicleCanStateStore.put(state);
-                    }, () -> markUnsupported(vehicle, newest));
+                    }, () -> markUnsupported(vehicle, newest.getReceivedAt()));
         }
     }
 
@@ -143,6 +145,16 @@ public class GcanProcessingScheduler {
         state.setBoxIdDec(vehicle.getBoxIdDec());
     }
 
+    private boolean isFreshForState(RawCanFrame frame) {
+        return frame != null && ((frame.getSource() == RawCanFrameSource.MIRROR
+                && properties.getMirror().isIgnoreStaleFrames())
+                || isFresh(frame.getReceivedAt()));
+    }
+
+    private boolean isGcanState(VehicleCanState state) {
+        return state.getAccessMode() == null || "GCAN".equalsIgnoreCase(state.getAccessMode());
+    }
+
     private boolean isFresh(LocalDateTime time) {
         if (time == null) {
             return false;
@@ -150,10 +162,10 @@ public class GcanProcessingScheduler {
         return Duration.between(time, LocalDateTime.now()).toMillis() <= properties.getFrameStaleThresholdMs();
     }
 
-    private LocalDateTime newestReceivedAt(List<RawCanFrame> frames) {
+    private RawCanFrame newestFrame(List<RawCanFrame> frames) {
         return frames.stream()
-                .map(RawCanFrame::getReceivedAt)
-                .max(Comparator.naturalOrder())
+                .max(Comparator.comparing(RawCanFrame::getReceivedAt,
+                        Comparator.nullsFirst(Comparator.naturalOrder())))
                 .orElse(null);
     }
 }

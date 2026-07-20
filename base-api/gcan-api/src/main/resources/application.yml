@@ -38,29 +38,35 @@ gcan:
     poll-interval-ms: ${GCAN_MIRROR_POLL_INTERVAL_MS:1000}
     connect-timeout-ms: ${GCAN_MIRROR_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${GCAN_MIRROR_READ_TIMEOUT_MS:2000}
+    # 仅允许镜像帧跳过实时状态的新鲜度判断；不影响 TCP 接入和 CAN 历史的新鲜度规则。
+    ignore-stale-frames: ${GCAN_MIRROR_IGNORE_STALE_FRAMES:true}
     # 目标盒子编号，支持 01、0x01 等 HEX 写法，多个值用逗号分隔。
     box-ids: ${GCAN_MIRROR_BOX_IDS:33,3B}
     # 可选的 CAN ID 过滤列表，多个值用逗号分隔；为空表示不按 CAN ID 过滤。
     can-ids: ${GCAN_MIRROR_CAN_IDS:}
   external:
-    # 煤矿接口车辆数据源。车辆通过 mineCode + vehicleCode 识别，不使用 boxId。
-    # 默认关闭；关闭时不会请求外部接口，适合离线开发。
-    # 数据库 sys_config 中的 gcan.external.* 配置运行时刷新后优先于这里的环境变量默认值。
+    # 煤矿接口车辆数据源。车辆通过 mineCode + vehicleCode 识别，不使用 GCAN boxId。
+    # 配置优先级：数据库 sys_config 中启用的 gcan.external.* > 环境变量 > 本文件中的默认值。
+    # 因此，数据库已有配置时，修改下面的值不会覆盖数据库配置；请到系统配置页面修改。
+    # 数据库配置查询失败时，才会回退到本文件（以及环境变量）中的值。
+    # 是否请求外部接口。数据库没有 gcan.external.enabled 时，默认值为 true；离线开发可用环境变量关闭。
+    # external 关闭时不会请求煤矿列表和车辆接口，也不会自动创建外部车辆档案。
+    # 数据库中若为 false，则环境变量和这里的 true 都不生效。
     enabled: ${GCAN_EXTERNAL_ENABLED:true}
-    # 外部接口服务根地址，例如 http://47.96.10.182:8088；不要在这里重复写接口路径。
+    # 外部服务根地址，例如 http://47.96.10.182:8088；这里只写根地址，不要重复写接口路径。
     base-url: ${GCAN_EXTERNAL_BASE_URL:http://47.96.10.182:8088}
-    # 煤矿列表接口路径；返回 mineCode、mineName、pullFrequency 等煤矿配置。
+    # 煤矿列表接口路径；返回 mineCode、mineName、pullFrequency、enabled 等煤矿配置。
     mine-list-endpoint: ${GCAN_EXTERNAL_MINE_LIST_ENDPOINT:/api/v1/mine-config/list}
     # 车辆数据接口路径，{mineCode} 会替换为煤矿编码，例如 HX。
     vehicle-data-endpoint: ${GCAN_EXTERNAL_VEHICLE_DATA_ENDPOINT:/api/v1/vehicle-data/{mineCode}}
-    # 外部车辆数据轮询周期，单位：毫秒；也可按接口返回的 pullFrequency 判定新鲜度。
+    # 外部车辆同步周期，单位：毫秒；首次启用后立即同步，后续按此周期请求全部启用煤矿。
     poll-interval-ms: ${GCAN_EXTERNAL_POLL_INTERVAL_MS:300000}
-    # 系统配置刷新周期，修改 gcan.external.* 后最多等待该时间生效，单位：毫秒。
+    # 数据库配置刷新周期，单位：毫秒；修改系统配置后通常最多等待该时间生效，无需重启。
     config-refresh-interval-ms: ${GCAN_EXTERNAL_CONFIG_REFRESH_INTERVAL_MS:10000}
-    # 外部接口连接建立和读取响应的超时时间，单位：毫秒。
+    # 每次请求建立连接和读取响应的超时时间，单位：毫秒。
     connect-timeout-ms: ${GCAN_EXTERNAL_CONNECT_TIMEOUT_MS:3000}
     read-timeout-ms: ${GCAN_EXTERNAL_READ_TIMEOUT_MS:10000}
-    # 数据新鲜度阈值倍数：超过 pullFrequency × 此倍数仍未收到新 dataTime 时标记离线。
+    # 外部车辆数据新鲜度倍数：超过 pullFrequency × 此倍数仍未收到新的 dataTime 时标记离线。
     freshness-multiplier: ${GCAN_EXTERNAL_FRESHNESS_MULTIPLIER:2}
   history:
     # GCAN 原始帧历史存储；仅针对 GCAN 盒子数据，煤矿接口车辆不写入 CAN 历史。
