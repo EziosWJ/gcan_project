@@ -31,7 +31,7 @@ gcan:
   mirror:
     # GCAN 原始帧镜像：从另一套 gcan-api 拉取当前 CAN 帧供开发调试。
     # 默认关闭；开启后按 box-ids 拉取，不会自动导入对方车辆档案。
-    enabled: ${GCAN_MIRROR_ENABLED:true}
+    enabled: ${GCAN_MIRROR_ENABLED:false}
     base-url: ${GCAN_MIRROR_BASE_URL:http://47.96.10.182:8081}
     endpoint: /api/open/gcan/v1/raw-frame/current
     # 镜像轮询周期和 HTTP 超时时间，单位：毫秒。
