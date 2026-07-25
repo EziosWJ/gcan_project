@@ -5,6 +5,7 @@ type MetricBarProps = {
   min: number;
   max: number;
   signed?: boolean;
+  precision?: number;
 };
 
 function toNumber(value: MetricBarProps["value"]) {
@@ -20,6 +21,7 @@ export function MetricBar({
   min,
   max,
   signed = false,
+  precision,
 }: MetricBarProps) {
   const numericValue = toNumber(value);
   const range = max - min;
@@ -30,13 +32,18 @@ export function MetricBar({
   const barWidth = signed
     ? Math.abs(clampedPosition - zeroPosition)
     : clampedPosition;
+  const displayValue = numericValue === null
+    ? "—"
+    : precision === undefined
+      ? numericValue
+      : numericValue.toFixed(precision);
 
   return (
     <div className="monitor-metric">
       <div className="monitor-metric__topline">
         <span>{label}</span>
         <span className="monitor-metric__reading">
-          {numericValue === null ? "—" : numericValue}
+          {displayValue}
           <small>{unit}</small>
         </span>
       </div>

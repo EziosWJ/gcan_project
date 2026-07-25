@@ -28,6 +28,23 @@ function valueOrDash(value: DetailItem["value"]) {
   return String(value);
 }
 
+function detailValue(value: DetailItem["value"]) {
+  if (value === 0 || value === "0") return "关闭";
+  if (value === 1 || value === "1") return "打开";
+  return valueOrDash(value);
+}
+
+function nonNegativeValue(value: DetailItem["value"]) {
+  if (value === null || value === undefined || value === "") return value;
+  const numericValue = Number(value);
+  return Number.isFinite(numericValue) ? Math.max(0, numericValue) : value;
+}
+
+function gearLabel(value: DetailItem["value"]) {
+  if (value === null || value === undefined || value === "") return "—";
+  return { "0": "N", "1": "P", "5": "R", "10": "D", "255": "故障" }[String(value)] ?? String(value);
+}
+
 function valueWithUnit(value: DetailItem["value"], unit: string) {
   return value === null || value === undefined || value === "" ? null : `${value} ${unit}`;
 }
@@ -116,7 +133,7 @@ function detailGroups(vehicle: GcanMonitorVehicle): { title: string; items: Deta
         { label: "远光灯", value: vehicle.highBeam },
         { label: "近光灯", value: vehicle.lowBeam },
         { label: "小灯", value: vehicle.smallLight },
-        { label: "车门 1 / 2 / 3", value: [vehicle.door1Open, vehicle.door2Open, vehicle.door3Open].map(valueOrDash).join(" / ") },
+        { label: "车门 1 / 2 / 3", value: [vehicle.door1Open, vehicle.door2Open, vehicle.door3Open].map(detailValue).join(" / ") },
       ],
     },
     {
@@ -173,8 +190,8 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
       </div>
 
       <div className="monitor-vehicle-card__metrics">
-        <MetricBar label="车速" value={vehicle.speed} unit="km/h" min={0} max={40} />
-        <MetricBar label="电量" value={vehicle.batteryPercentage} unit="%" min={0} max={100} />
+        <MetricBar label="车速" value={nonNegativeValue(vehicle.speed)} unit="km/h" min={0} max={40} />
+        <MetricBar label="电量" value={vehicle.batteryPercentage} unit="%" min={0} max={100} precision={2} />
         <MetricBar label="电池电压" value={vehicle.batteryVoltage} unit="V" min={0} max={1000} />
         <MetricBar label="电流" value={vehicle.motorACCurrent ?? vehicle.batteryElectric} unit="A" min={-300} max={300} signed />
         <MetricBar label="高压" value={vehicle.highVoltage} unit="V" min={0} max={1000} />
@@ -185,7 +202,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
 
       <div className="monitor-vehicle-card__quick-row">
         <div><span>运行状态</span><strong>{hasData ? valueOrDash(vehicle.runState) : "暂无数据"}</strong></div>
-        <div><span>档位</span><strong>{hasData ? valueOrDash(vehicle.gear) : "—"}</strong></div>
+        <div><span>档位</span><strong>{hasData ? gearLabel(vehicle.gear) : "—"}</strong></div>
         <div className={`monitor-fault monitor-fault--${faultPresentation.tone}`}>
           <AlertTriangle aria-hidden="true" /><span>{faultPresentation.label}</span><b>{faultPresentation.detail}</b>
         </div>
@@ -208,7 +225,7 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
               <h4>{group.title}</h4>
               <dl>
                 {group.items.map((item) => (
-                  <div key={item.label}><dt>{item.label}</dt><dd>{valueOrDash(item.value)}</dd></div>
+                  <div key={item.label}><dt>{item.label}</dt><dd>{detailValue(item.value)}</dd></div>
                 ))}
               </dl>
             </div>
