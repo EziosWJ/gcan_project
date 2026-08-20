@@ -331,10 +331,10 @@ curl "${BASE_URL}/api/open/gcan/v1/raw-frame/history/page?receivedStart=2026-07-
 
 | 字段 | 类型 | 单位 | 说明 |
 | --- | --- | --- | --- |
-| `highVoltage` | `number\|null` | `V` | 高压电压 |
-| `lowVoltage` | `number\|null` | `V` | 低压电压 |
-| `highTemperature` | `number\|null` | `℃` | 最高温度 |
-| `lowTemperature` | `number\|null` | `℃` | 最低温度 |
+| `highVoltage` | `number\|null` | `V` | 最高单体电压 |
+| `lowVoltage` | `number\|null` | `V` | 最低单体电压 |
+| `highTemperature` | `number\|null` | `℃` | 最高电池模块温度 |
+| `lowTemperature` | `number\|null` | `℃` | 最低电池模块温度 |
 | `motorControllerTemperature` | `number\|null` | `℃` | 电机控制器温度 |
 | `motorTemperature` | `number\|null` | `℃` | 电机温度 |
 | `insulationState` | `string\|null` | - | 绝缘状态，协议原始值通常为 `0`/`1` 字符串 |

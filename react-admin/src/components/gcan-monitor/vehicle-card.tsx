@@ -194,10 +194,13 @@ export function VehicleCard({ vehicle }: VehicleCardProps) {
         <MetricBar label="电量" value={vehicle.batteryPercentage} unit="%" min={0} max={100} precision={2} />
         <MetricBar label="电池电压" value={vehicle.batteryVoltage} unit="V" min={0} max={1000} />
         <MetricBar label="电流" value={vehicle.motorACCurrent ?? vehicle.batteryElectric} unit="A" min={-300} max={300} signed />
-        <MetricBar label="高压" value={vehicle.highVoltage} unit="V" min={0} max={1000} />
-        <MetricBar label="低压" value={vehicle.lowVoltage} unit="V" min={0} max={32} />
-        <MetricBar label="高温" value={vehicle.highTemperature} unit="℃" min={-40} max={150} />
-        <MetricBar label="低温" value={vehicle.lowTemperature} unit="℃" min={-40} max={150} />
+        <MetricBar label="最高单体电压" value={vehicle.highVoltage} unit="V" min={0} max={5} precision={3} />
+        <MetricBar label="最低单体电压" value={vehicle.lowVoltage} unit="V" min={0} max={5} precision={3} />
+        <MetricBar label="最高电池模块温度" value={vehicle.highTemperature} unit="℃" min={-40} max={150} precision={1} />
+        <MetricBar label="最低电池模块温度" value={vehicle.lowTemperature} unit="℃" min={-40} max={150} precision={1} />
+        <MetricBar label="MCU 温度" value={vehicle.motorControllerTemperature} unit="℃" min={-40} max={150} />
+        <MetricBar label="电机温度" value={vehicle.motorTemperature} unit="℃" min={-40} max={150} />
+        <MetricBar label="启动蓄电池电压" value={vehicle.startBatteryVoltage} unit="V" min={0} max={32} />
       </div>
 
       <div className="monitor-vehicle-card__quick-row">
